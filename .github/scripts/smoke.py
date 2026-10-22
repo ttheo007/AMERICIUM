@@ -60,6 +60,7 @@ s = socket.create_connection(("127.0.0.1", 25575), timeout=120)
 rcon(s, 1, 3, "ci")
 cmds = [
     ("forceload", "forceload add 0 0 48 40"),
+    ("wait-load", 20),
     ("place", "execute in minecraft:overworld run place structure americium:store 0 80 0"),
     ("wait", None),
     ("villager-count", "execute in minecraft:overworld if entity @e[type=minecraft:villager]"),
@@ -69,8 +70,8 @@ cmds = [
     ("old-camp", "locate structure minecraft:abandoned_camp_forest"),
 ]
 for title, cmd in cmds:
-    if cmd is None:
-        time.sleep(5)
+    if cmd is None or isinstance(cmd, int):
+        time.sleep(cmd or 5)
         continue
     try:
         _, out = rcon(s, 2, 2, cmd)
