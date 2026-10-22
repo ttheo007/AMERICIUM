@@ -59,15 +59,15 @@ def rcon(sock, rid, ptype, body):
 s = socket.create_connection(("127.0.0.1", 25575), timeout=120)
 rcon(s, 1, 3, "ci")
 cmds = [
-    ("forceload", "forceload add 0 0 48 40"),
-    ("wait-load", 20),
+    ("forceload", "forceload add -64 -64 112 112"),
+    ("wait-load", 30),
     ("loaded-q", "forceload query 0 0"),
-    ("loaded-if", "execute in minecraft:overworld if loaded 8 80 8"),
-    ("place", "RETRY execute in minecraft:overworld run place structure americium:store 8 80 8"),
+    ("loaded-if", "execute in minecraft:overworld if loaded 24 80 24"),
+    ("place", "RETRY execute in minecraft:overworld run place structure americium:store 24 80 24"),
     ("wait", None),
     ("villager-count", "execute in minecraft:overworld if entity @e[type=minecraft:villager]"),
-    ("offers", "data get entity @e[type=minecraft:villager,limit=1,sort=nearest,x=20,y=70,z=20] Offers"),
-    ("name", "data get entity @e[type=minecraft:villager,limit=1,sort=nearest,x=20,y=70,z=20] CustomName"),
+    ("offers", "data get entity @e[type=minecraft:villager,limit=1,sort=nearest,x=24,y=80,z=24] Offers"),
+    ("name", "data get entity @e[type=minecraft:villager,limit=1,sort=nearest,x=24,y=80,z=24] CustomName"),
     ("locate", "locate structure americium:store"),
     ("old-camp", "locate structure minecraft:abandoned_camp_forest"),
 ]
