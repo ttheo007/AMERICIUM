@@ -1,13 +1,13 @@
 # AMERICIUM
 
-A Fabric mod for Minecraft Java Edition 26.3.
+A private Fabric mod for Minecraft Java Edition 26.3.
 
-AMERICIUM turns campfires and camping spots into small trading hubs. Players will be able to use a custom AMERICIUM currency to buy villagers and survival equipment, including netherite gear.
+AMERICIUM replaces the new "Abandoned Camps" structure with American-style supercenter stores. Players pay with a custom AMERICIUM currency to buy villagers and netherite equipment.
 
 ## Planned features
 
 - Custom AMERICIUM currency item
-- Campfire-based market interaction
+- Store building generated naturally in the world in place of the Abandoned Camps
 - Purchasable villagers
 - Netherite equipment and materials shop
 - Server-authoritative trading for multiplayer
@@ -15,25 +15,25 @@ AMERICIUM turns campfires and camping spots into small trading hubs. Players wil
 
 ## Development status
 
-**Early development scaffold.** The project metadata and initial currency item are being set up first. The full campfire market, purchase menus, persistence, and balancing still need implementation and testing in Minecraft 26.3.
+**Early development.** The project metadata and the currency item exist. The store structure, the shop and the villager purchase still need to be implemented and tested in Minecraft 26.3.
 
 ## Requirements
 
 - Minecraft Java Edition 26.3
-- Fabric Loader
+- Fabric Loader 0.19.5 or newer
 - Fabric API
-- Java version required by the current Minecraft 26.3 toolchain
+- Java 25
 
 ## Build
 
-Use a compatible JDK and run:
+The GitHub Actions workflow builds the mod with Java 25 and uploads the JAR as the `americium-jar` artifact. Locally, use a Java 25 JDK and run:
 
 ```bash
-./gradlew build
+gradle build
 ```
 
 The resulting mod JAR will be in `build/libs/`.
 
-## Repository
+## Note on names and logos
 
-https://github.com/ttheo007/AMERICIUM
+The store theme is inspired by a real retail brand. This project is for private use only and must not be published or distributed under that brand name or logo.

@@ -24,6 +24,30 @@ jobs:
           gradle-version: '9.6.0'
       - name: Build mod
         run: gradle build
+      - name: Dump camp structure IDs from the Minecraft jar
+        if: always()
+        run: |
+          mkdir -p discovery
+          for jar in $(find "$HOME/.gradle" -name '*.jar' -size +10M 2>/dev/null); do
+            if unzip -l "$jar" 2>/dev/null | grep -q 'data/minecraft/worldgen/structure/'; then
+              echo "== $jar" | tee -a discovery/jar.txt
+              unzip -l "$jar" | awk '{print $4}' | grep -E '^data/minecraft/(worldgen/(structure|structure_set|template_pool|processor_list)|structure)/' | grep -i -E 'camp' | tee -a discovery/camp-files.txt || true
+              unzip -l "$jar" | awk '{print $4}' | grep -E '^data/minecraft/worldgen/structure/' | tee -a discovery/all-structures.txt > /dev/null
+              unzip -l "$jar" | awk '{print $4}' | grep -E '^data/minecraft/worldgen/structure_set/' | tee -a discovery/all-structure-sets.txt > /dev/null
+              unzip -p "$jar" 'data/minecraft/worldgen/structure_set/*camp*.json' 2>/dev/null | tee -a discovery/camp-structure-set.json || true
+              unzip -p "$jar" 'data/minecraft/worldgen/structure/*camp*.json' 2>/dev/null | tee -a discovery/camp-structure.json || true
+              unzip -p "$jar" 'data/minecraft/tags/worldgen/biome/has_structure/*camp*.json' 2>/dev/null | tee -a discovery/camp-biome-tag.json || true
+              unzip -l "$jar" | awk '{print $4}' | grep -E '^data/minecraft/(worldgen/template_pool|structure)/.*camp' > /dev/null || true
+              break
+            fi
+          done
+      - name: Upload discovery output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: discovery
+          path: discovery/
+          if-no-files-found: warn
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
