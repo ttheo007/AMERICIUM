@@ -148,21 +148,19 @@ for x in range(WX0, WX1):
         if x in (WX0, WX1 - 1) or z in (WZ0, WZ1 - 1):
             put(x, ROOF + 1, z, TRIM)
 
-# blue band across the front: y 5..8 on the front wall
+# blue band across the front: y 4..8 on the front wall
 for x in range(WX0, WX1):
-    for y in range(5, ROOF + 1):
+    for y in range(4, ROOF + 1):
         put(x, y, WZ0, BAND)
 
 # glass storefront with two open doorways
 for x in range(WX0 + 4, WX1 - 4):
-    for y in range(1, 5):
+    for y in range(1, 4):
         put(x, y, WZ0, GLASS)
 cx = (WX0 + WX1) // 2            # centre x
 for dx in (-3, -2, 2, 3):
-    for y in range(1, 4):
+    for y in range(1, 3):
         put(cx + dx, y, WZ0, AIR)
-for x in range(WX0 + 4, WX1 - 4):
-    put(x, 4, WZ0, GLASS)
 
 # pixel sign: "AMERICIUM" + spark. 3x5 font, front face (z = WZ0 - 1 is outside),
 # the letters are placed on the band surface itself (z = WZ0), replacing blue blocks.
