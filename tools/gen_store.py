@@ -333,9 +333,10 @@ def main():
 
     palette = []
     for name, props in keys:
-        entry = {"Name": name}
+        # Minecraft 26.x uses lowercase keys here (older versions: Name / Properties).
+        entry = {"id": name}
         if props:
-            entry["Properties"] = {k: v for k, v in props}
+            entry["properties"] = {k: v for k, v in props}
         palette.append(entry)
 
     root = {
