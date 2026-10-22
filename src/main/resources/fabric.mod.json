@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "americium",
+  "version": "${version}",
+  "name": "AMERICIUM",
+  "description": "Turn campfires and camping spots into markets using a custom currency.",
+  "authors": ["ttheo007"],
+  "license": "All-Rights-Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.ttheo.americium.AmericiumMod"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
