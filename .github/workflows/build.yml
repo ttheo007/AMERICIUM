@@ -36,6 +36,10 @@ jobs:
       - name: Discover camp structure data
         if: always()
         run: python3 .github/scripts/discover.py
+      - name: Dump NBT formats
+        if: always()
+        continue-on-error: true
+        run: python3 .github/scripts/nbtdump.py
       - name: Server smoke test
         if: always()
         continue-on-error: true
