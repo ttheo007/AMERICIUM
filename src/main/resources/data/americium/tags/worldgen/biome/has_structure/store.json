@@ -1,0 +1,22 @@
+{
+  "values": [
+    "#minecraft:has_structure/abandoned_camp_bamboo_jungle",
+    "#minecraft:has_structure/abandoned_camp_birch_forest",
+    "#minecraft:has_structure/abandoned_camp_cherry_grove",
+    "#minecraft:has_structure/abandoned_camp_dappled_forest",
+    "#minecraft:has_structure/abandoned_camp_flower_forest",
+    "#minecraft:has_structure/abandoned_camp_forest",
+    "#minecraft:has_structure/abandoned_camp_meadow",
+    "#minecraft:has_structure/abandoned_camp_old_growth_pine_taiga",
+    "#minecraft:has_structure/abandoned_camp_old_growth_birch_forest",
+    "#minecraft:has_structure/abandoned_camp_old_growth_spruce_taiga",
+    "#minecraft:has_structure/abandoned_camp_pale_garden",
+    "#minecraft:has_structure/abandoned_camp_savanna",
+    "#minecraft:has_structure/abandoned_camp_snowy_taiga",
+    "#minecraft:has_structure/abandoned_camp_sparse_jungle",
+    "#minecraft:has_structure/abandoned_camp_swamp",
+    "#minecraft:has_structure/abandoned_camp_taiga",
+    "#minecraft:has_structure/abandoned_camp_windswept_forest",
+    "#minecraft:has_structure/abandoned_camp_wooded_badlands"
+  ]
+}

@@ -36,6 +36,11 @@ jobs:
       - name: Discover camp structure data
         if: always()
         run: python3 .github/scripts/discover.py
+      - name: Server smoke test
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 12
+        run: python3 .github/scripts/smoke.py
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
