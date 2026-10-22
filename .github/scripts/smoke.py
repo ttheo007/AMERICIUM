@@ -8,7 +8,7 @@ open(RUN + "/eula.txt", "w").write("eula=true\n")
 open(RUN + "/server.properties", "w").write("\n".join([
     "online-mode=false", "enable-rcon=true", "rcon.port=25575", "rcon.password=ci",
     "level-seed=1234", "view-distance=4", "simulation-distance=4",
-    "spawn-protection=0", "motd=ci", ""]))
+    "spawn-protection=0", "pause-when-empty-seconds=-1", "motd=ci", ""]))
 
 
 def esc(s):
