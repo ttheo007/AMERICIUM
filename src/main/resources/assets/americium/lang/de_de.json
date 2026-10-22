@@ -1,3 +1,5 @@
 {
-  "item.americium.americium_coin": "AMERICIUM-Münze"
+  "item.americium.americium_coin": "AMERICIUM-Bronzemünze",
+  "item.americium.americium_silver_coin": "AMERICIUM-Silbermünze",
+  "item.americium.americium_gold_coin": "AMERICIUM-Goldmünze"
 }

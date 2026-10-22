@@ -1,3 +1,5 @@
 {
-  "item.americium.americium_coin": "AMERICIUM Coin"
+  "item.americium.americium_coin": "AMERICIUM Bronze Coin",
+  "item.americium.americium_silver_coin": "AMERICIUM Silver Coin",
+  "item.americium.americium_gold_coin": "AMERICIUM Gold Coin"
 }
