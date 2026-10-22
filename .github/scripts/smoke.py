@@ -67,6 +67,9 @@ cmds = [
     ("wait", None),
     ("pos", "data get entity @e[type=minecraft:villager,limit=1,sort=nearest,x=24,y=80,z=24] Pos"),
     ("COUNT", None),
+    ("probe", "execute in minecraft:overworld if block 28 61 8 minecraft:light_gray_concrete"),
+    ("template-place", "RETRY execute in minecraft:overworld run place template americium:store/main 8 150 8"),
+    ("COUNT2", None),
     ("villager-count", "execute in minecraft:overworld if entity @e[type=minecraft:villager]"),
     ("offers", "data get entity @e[type=minecraft:villager,limit=1,sort=nearest,x=24,y=80,z=24] Offers"),
     ("name", "data get entity @e[type=minecraft:villager,limit=1,sort=nearest,x=24,y=80,z=24] CustomName"),
@@ -74,11 +77,12 @@ cmds = [
     ("old-camp", "locate structure minecraft:abandoned_camp_forest"),
 ]
 for title, cmd in cmds:
-    if title == "COUNT":
+    if title in ("COUNT", "COUNT2"):
         totals = {}
+        yrange = range(0, 192, 8) if title == "COUNT" else range(144, 176, 8)
         for blk in ("gray_concrete", "light_gray_concrete", "blue_concrete", "white_concrete", "sea_lantern"):
             n = 0
-            for y0 in range(0, 192, 8):
+            for y0 in yrange:
                 try:
                     _, o = rcon(s, 2, 2, "execute in minecraft:overworld run fill 0 %d 0 63 %d 63 minecraft:air replace minecraft:%s" % (y0, y0 + 7, blk))
                 except Exception as e:  # noqa
@@ -87,7 +91,7 @@ for title, cmd in cmds:
                 if m:
                     n += int(m.group(1))
             totals[blk] = n
-        note("notice", "smoke-blocks", "blocks found after place (x 0..63, z 0..63, y 0..191): %r" % totals)
+        note("notice", "smoke-blocks-" + title, "blocks found after place (x 0..63, z 0..63, y 0..191): %r" % totals)
         continue
     if cmd is None or isinstance(cmd, int):
         time.sleep(cmd or 5)
