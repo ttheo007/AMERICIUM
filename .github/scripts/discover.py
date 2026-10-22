@@ -24,6 +24,9 @@ if not jar:
 
 path, z = jar
 names = z.namelist()
+for vn in ("version.json",):
+    if vn in names:
+        notice("disc-version", z.read(vn).decode("utf-8"))
 camp = [n for n in names if re.search(r"camp", n, re.I)]
 notice("disc-jar", path + "\n" + str(len(names)) + " entries\n" + "\n".join(camp))
 
