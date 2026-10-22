@@ -61,7 +61,9 @@ rcon(s, 1, 3, "ci")
 cmds = [
     ("forceload", "forceload add 0 0 48 40"),
     ("wait-load", 20),
-    ("place", "execute in minecraft:overworld run place structure americium:store 0 80 0"),
+    ("loaded-q", "forceload query 0 0"),
+    ("loaded-if", "execute in minecraft:overworld if loaded 8 80 8"),
+    ("place", "RETRY execute in minecraft:overworld run place structure americium:store 8 80 8"),
     ("wait", None),
     ("villager-count", "execute in minecraft:overworld if entity @e[type=minecraft:villager]"),
     ("offers", "data get entity @e[type=minecraft:villager,limit=1,sort=nearest,x=20,y=70,z=20] Offers"),
@@ -73,10 +75,19 @@ for title, cmd in cmds:
     if cmd is None or isinstance(cmd, int):
         time.sleep(cmd or 5)
         continue
-    try:
-        _, out = rcon(s, 2, 2, cmd)
-    except Exception as e:  # noqa
-        out = "rcon error: %r" % (e,)
+    retry = cmd.startswith("RETRY ")
+    if retry:
+        cmd = cmd[6:]
+    out = ""
+    for attempt in range(8 if retry else 1):
+        try:
+            _, out = rcon(s, 2, 2, cmd)
+        except Exception as e:  # noqa
+            out = "rcon error: %r" % (e,)
+        if not (retry and "not loaded" in out):
+            break
+        time.sleep(10)
+    out = "(attempts: %d) %s" % (attempt + 1, out)
     note("notice", "smoke-" + title, cmd + "\n=> " + out)
 try:
     rcon(s, 3, 2, "stop")
