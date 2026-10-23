@@ -15,8 +15,27 @@ def esc(s):
     return s.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
 
 
+RESULTS = []
+
+
 def note(level, title, text):
-    print("::%s title=%s::%s" % (level, title, esc(text[:3800])), flush=True)
+    if level == "error":
+        print("::%s title=%s::%s" % (level, title, esc(text[:3800])), flush=True)
+    else:
+        RESULTS.append("[%s] %s" % (title.replace("smoke-", ""), text[:700]))
+
+
+def flush_results():
+    buf = ""
+    n = 0
+    for r in RESULTS + [""]:
+        if r and len(buf) + len(r) < 3500:
+            buf += r + "\n"
+            continue
+        if buf:
+            n += 1
+            print("::notice title=smoke-result-%d::%s" % (n, esc(buf)), flush=True)
+        buf = r + "\n" if r else ""
 
 
 log = open("server.log", "w")
@@ -61,16 +80,16 @@ rcon(s, 1, 3, "ci")
 cmds = [
     ("forceload", "forceload add -96 -96 128 128"),
     ("wait-load", 40),
-    ("ground", "execute in minecraft:overworld positioned 24 0 24 over world_surface run summon minecraft:marker ~ ~ ~ {Tags:[\"g\"]}"),
+    ("ground", "execute in minecraft:overworld positioned 24 0 24 positioned over world_surface run summon minecraft:marker ~ ~ ~ {Tags:[\"g\"]}"),
     ("ground-pos", "data get entity @e[type=minecraft:marker,tag=g,limit=1] Pos"),
     ("place", "RETRY execute in minecraft:overworld run place structure americium:store 24 80 24"),
     ("wait", None),
     ("villager-count", "execute in minecraft:overworld if entity @e[type=minecraft:villager]"),
     ("minecarts", "execute in minecraft:overworld if entity @e[type=minecraft:minecart]"),
     ("cashier-pos", "data get entity @e[type=minecraft:villager,name=\"Cashier\",limit=1] Pos"),
-    ("grocery", "data get entity @e[type=minecraft:villager,name=\"Grocery\",limit=1] Offers[0]"),
-    ("netherite", "data get entity @e[type=minecraft:villager,name=\"Netherite Shop\",limit=1] Offers[1]"),
-    ("exchange", "data get entity @e[type=minecraft:villager,name=\"Currency Exchange\",limit=1] Offers[7]"),
+    ("grocery", "data get entity @e[type=minecraft:villager,name=\"Grocery\",limit=1] Offers.Recipes[0]"),
+    ("netherite", "data get entity @e[type=minecraft:villager,name=\"Netherite Shop\",limit=1] Offers.Recipes[1]"),
+    ("exchange", "data get entity @e[type=minecraft:villager,name=\"Currency Exchange\",limit=1] Offers.Recipes[7]"),
     ("LAYERS", None),
     ("COUNT", None),
     ("locate", "locate structure americium:store"),
@@ -138,3 +157,4 @@ except Exception:
 txt = read_log()
 bad = [l for l in txt.splitlines() if re.search(r"\[(ERROR|WARN)\]|Exception|Failed to|Couldn't|Unknown|Invalid", l)]
 note("warning" if bad else "notice", "smoke-log", "\n".join(bad[:40]) if bad else "no warnings or errors in server log")
+flush_results()
