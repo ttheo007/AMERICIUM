@@ -84,14 +84,27 @@ cmds = [
     ("ground-pos", "data get entity @e[type=minecraft:marker,tag=g,limit=1] Pos"),
     ("place", "RETRY execute in minecraft:overworld run place structure americium:store 24 80 24"),
     ("wait", None),
-    ("villager-count", "execute in minecraft:overworld if entity @e[type=minecraft:villager]"),
+    ("villagers", "execute in minecraft:overworld if entity @e[type=minecraft:villager]"),
     ("minecarts", "execute in minecraft:overworld if entity @e[type=minecraft:minecart]"),
-    ("cashier-pos", "data get entity @e[type=minecraft:villager,name=\"Cashier\",limit=1] Pos"),
-    ("grocery", "data get entity @e[type=minecraft:villager,name=\"Grocery\",limit=1] Offers.Recipes[0]"),
-    ("netherite", "data get entity @e[type=minecraft:villager,name=\"Netherite Shop\",limit=1] Offers.Recipes[1]"),
-    ("exchange", "data get entity @e[type=minecraft:villager,name=\"Currency Exchange\",limit=1] Offers.Recipes[7]"),
+    ("item-displays", "execute in minecraft:overworld if entity @e[type=minecraft:item_display,tag=am_shelf]"),
+    ("text-displays", "execute in minecraft:overworld if entity @e[type=minecraft:text_display]"),
+    ("no-ai", "data get entity @e[type=minecraft:villager,tag=am_npc,limit=1] NoAI"),
+    ("clerk-pos-1", "data get entity @e[type=minecraft:villager,tag=am_stocker,limit=1] Pos"),
+    ("pet-shop", "data get entity @e[type=minecraft:villager,name=\"Pet Shop\",limit=1] Offers.Recipes[0]"),
+    ("label", "data get entity @e[type=minecraft:text_display,limit=1] text"),
+    ("transform", "data get entity @e[type=minecraft:item_display,limit=1] transformation"),
+    ("barrel", "execute as @e[type=minecraft:item_display,tag=am_shelf,limit=1] at @s positioned ~ ~-3 ~ run data get block ~ ~ ~ Items"),
+    ("barrel-clear", "execute as @e[type=minecraft:item_display,tag=am_shelf,limit=1] at @s positioned ~ ~-3 ~ run item replace block ~ ~ ~ container.0 with minecraft:air"),
+    ("barrel-empty", "execute as @e[type=minecraft:item_display,tag=am_shelf,limit=1] at @s positioned ~ ~-3 ~ run data get block ~ ~ ~ Items"),
+    ("restock-one", "execute as @e[type=minecraft:item_display,tag=am_shelf,limit=1] at @s run function americium:restock_one with entity @s item"),
+    ("barrel-after", "execute as @e[type=minecraft:item_display,tag=am_shelf,limit=1] at @s positioned ~ ~-3 ~ run data get block ~ ~ ~ Items"),
+    ("gate-in-store", "execute as @e[type=minecraft:marker,tag=am_exit_gate,limit=1] at @s if predicate americium:in_store"),
+    ("far-not-in-store", "execute in minecraft:overworld positioned 5000 100 5000 if predicate americium:in_store"),
+    ("objectives", "scoreboard objectives list"),
+    ("slow-run", "function americium:slow"),
+    ("wait-move", 25),
+    ("clerk-pos-2", "data get entity @e[type=minecraft:villager,tag=am_stocker,limit=1] Pos"),
     ("LAYERS", None),
-    ("COUNT", None),
     ("locate", "locate structure americium:store"),
     ("old-camp", "locate structure minecraft:abandoned_camp_forest"),
 ]
@@ -111,22 +124,6 @@ for title, cmd in cmds:
             if n:
                 layers[y] = n
         note("notice", "smoke-apron-layers", "gray_concrete (apron, the floor level) per y: %r" % layers)
-        continue
-    if title == "COUNT":
-        totals = {}
-        for blk in ("light_gray_concrete", "blue_concrete", "glowstone", "polished_andesite", "barrel"):
-            n = 0
-            for y0 in range(40, 111):
-                for (xa, xb) in ((-96, 16), (17, 128)):
-                    try:
-                        _, o = rcon(s, 2, 2, "execute in minecraft:overworld run fill %d %d -96 %d %d 128 minecraft:air replace minecraft:%s" % (xa, y0, xb, y0, blk))
-                    except Exception:
-                        o = ""
-                    m = re.search(r"filled (\d+)", o)
-                    if m:
-                        n += int(m.group(1))
-            totals[blk] = n
-        note("notice", "smoke-blocks", "blocks found: %r" % totals)
         continue
     if cmd is None or isinstance(cmd, int):
         time.sleep(cmd or 5)
