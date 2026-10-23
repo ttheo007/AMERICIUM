@@ -7,11 +7,11 @@ AMERICIUM replaces the new "Abandoned Camps" structure with American-style super
 ## What it does
 
 - The Abandoned Camps structure set (`minecraft:abandoned_camp`) is overridden: camps no longer generate. A superstore (`americium:store`) generates in the same 18 biomes with the same spacing.
-- The store has a blue sign with the pixel text AMERICIUM and a yellow spark, a parking lot, a glass front with two open doorways, shelf rows and checkout counters.
-- Four villager traders stand inside. They cannot move or be hurt. Trading is vanilla villager trading, so purchases are checked by the server.
-  - **Netherite Shop**: scrap, ingot, upgrade template, armor, tools (48 to 64 coins each).
-  - **Villager Market**: a villager spawn egg for 64 coins.
-  - **Currency Exchange** and **Cashier**: 1 emerald = 1 coin, 1 diamond = 6 coins, 1 netherite ingot = 40 coins.
+- The store is 95 x 82 blocks: a parking lot with cars and lamp posts, a sidewalk, a glass front with a wide entrance, a blue sign (AMERICIUM and a yellow spark), checkout lanes, shelf aisles and 14 departments. It sits on a foundation, so the floor is level with the terrain.
+- **Currency:** bronze coin (1), silver coin (10), gold coin (100). They are in the creative inventory under Ingredients.
+- **Traders** (vanilla villager trading, so the server checks every purchase): Netherite Shop, Grocery, Clothing, Electronics, Pharmacy, Garden Center, Pet Shop, Sporting Goods, Auto Center, Books & Stationery, Home & Furniture, Jewelry, Villager Market (villager spawn egg) and Currency Exchange (emerald, diamond, gold ingot, netherite ingot into coins, and change making).
+- **Cashiers** at the 8 checkout lanes make change between the coin types.
+- **Shoppers:** about 44 villagers walk-in-place in the aisles. They are not silent, so they mumble like normal villagers.
 - Prices are placeholders. Change them in `tools/gen_store.py` and regenerate (see below).
 
 ## Development status
