@@ -47,3 +47,15 @@ dump("disc-pools", r"^data/minecraft/worldgen/template_pool/.*camp.*\.json$")
 # village structure_set as reference for the JSON format
 sets = [n for n in names if n.startswith("data/minecraft/worldgen/structure_set/")]
 notice("disc-all-sets", "\n".join(sets))
+
+# find the creative tab event classes in the Fabric API jars
+hits = []
+for p in glob.glob(home + "/**/*.jar", recursive=True):
+    try:
+        zz = zipfile.ZipFile(p)
+    except Exception:
+        continue
+    for n in zz.namelist():
+        if re.search(r"(CreativeModeTab|ItemGroup)(Events|Entries|Output)[^/]*\.class$", n):
+            hits.append(os.path.basename(p) + " : " + n)
+notice("disc-tabapi", "\n".join(sorted(set(hits))[:40]) or "no matches")
