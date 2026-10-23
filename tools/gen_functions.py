@@ -185,7 +185,7 @@ fn("restock_one", [
 
 # --- predicate and tags ---------------------------------------------------------
 write(os.path.join(ROOT, "americium", "predicate", "in_store.json"), json.dumps(
-    {"condition": "minecraft:location_check", "predicate": {"structures": "americium:store"}}, indent=2))
+    {"type": "minecraft:location_check", "predicate": {"structures": "americium:store"}}, indent=2))
 write(os.path.join(ROOT, "minecraft", "tags", "function", "load.json"), json.dumps(
     {"values": ["americium:load"]}, indent=2))
 write(os.path.join(ROOT, "minecraft", "tags", "function", "tick.json"), json.dumps(
