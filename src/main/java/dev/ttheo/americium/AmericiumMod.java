@@ -1,7 +1,7 @@
 package dev.ttheo.americium;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -32,7 +32,7 @@ public final class AmericiumMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(entries -> {
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS).register(entries -> {
             entries.accept(AMERICIUM_COIN);
             entries.accept(AMERICIUM_SILVER_COIN);
             entries.accept(AMERICIUM_GOLD_COIN);

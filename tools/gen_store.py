@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
-"""Generates the store building as a vanilla structure template (NBT).
+"""Generates the superstore as a vanilla structure template (NBT).
 
 Usage: python3 tools/gen_store.py <DataVersion>
 Writes: src/main/resources/data/americium/structure/store/main.nbt
 
-Layout (x = width, z = depth, y = up). The front (parking lot and sign) is at z = 0.
-The sign text is mirrored along x on purpose: a viewer standing in front of the
-building looks towards +z, and +x is then on the viewer's left.
+Coordinates in this script are relative to the store floor: ry = 0 is the floor,
+ry = -FOUND .. -1 is the foundation under it. The worldgen JSON uses
+start_height = -FOUND, so the floor ends up level with the surface.
+The front (parking lot and sign) is at z = 0. The sign text is mirrored along x on
+purpose: a viewer in front of the building looks towards +z, and +x is then on the
+viewer's left.
 """
 import gzip
 import os
+import random
 import struct
 import sys
 
 # ----------------------------------------------------------------------------
 # Minimal NBT writer
 # ----------------------------------------------------------------------------
-TAG_END, TAG_BYTE, TAG_SHORT, TAG_INT, TAG_LONG, TAG_FLOAT, TAG_DOUBLE = 0, 1, 2, 3, 4, 5, 6
-TAG_STRING, TAG_LIST, TAG_COMPOUND = 8, 9, 10
+TAG_BYTE, TAG_INT, TAG_FLOAT, TAG_DOUBLE, TAG_STRING, TAG_LIST, TAG_COMPOUND = 1, 3, 5, 6, 8, 9, 10
 
 
 class B:  # byte
@@ -85,29 +88,39 @@ def nbt_bytes(root):
 
 
 # ----------------------------------------------------------------------------
-# Building
+# Dimensions
 # ----------------------------------------------------------------------------
-SX, SZ, SY = 47, 32, 13          # template size
-WX0, WX1 = 1, 46                 # building walls (x range, WX1 exclusive)
-WZ0, WZ1 = 7, 31                 # building walls (z range, WZ1 exclusive)
-ROOF = 8                         # roof layer
+FOUND = 4                        # foundation layers below the floor
+SX, SZ = 95, 82                  # template size in x and z
+SY = FOUND + 17                  # template height
+WX0, WX1 = 1, 94                 # building walls, x range (WX1 exclusive)
+WZ0, WZ1 = 26, 82                # building walls, z range (WZ1 exclusive)
+ROOF = 9                         # roof layer (relative to the floor)
+FACADE = 15                      # top of the front facade
+cx = (WX0 + WX1) // 2            # centre x of the building
 
-blocks = {}                      # (x, y, z) -> state key
-palette_keys = []                # list of (name, props tuple)
+rng = random.Random(20261023)
+
+blocks = {}                      # (x, y, z) -> state key, y already includes FOUND
 
 
 def state(name, **props):
     return ("minecraft:" + name, tuple(sorted((k, str(v)) for k, v in props.items())))
 
 
-def put(x, y, z, st):
-    blocks[(x, y, z)] = st
+def put(x, ry, z, st):
+    assert 0 <= x < SX and 0 <= z < SZ and -FOUND <= ry < SY - FOUND, (x, ry, z)
+    blocks[(x, ry + FOUND, z)] = st
 
 
 AIR = state("air")
-FLOOR = state("light_gray_concrete")
+FOUNDATION = state("stone_bricks")
 APRON = state("gray_concrete")
 LINE = state("white_concrete")
+SIDEWALK = state("light_gray_concrete")
+CURB = state("stone_bricks")
+TILE_A = state("light_gray_concrete")
+TILE_B = state("white_concrete")
 WALL = state("white_concrete")
 BAND = state("blue_concrete")
 LETTER = state("white_concrete")
@@ -116,54 +129,121 @@ GLASS = state("glass")
 ROOFB = state("light_gray_concrete")
 LAMP = state("sea_lantern")
 COUNTER = state("smooth_stone")
-SLAB = state("smooth_stone_slab", type="bottom", waterlogged="false")
-BARREL = state("barrel", facing="up", open="false")
+SLAB = state("smooth_stone_slab", type="bottom")
+BARREL = state("barrel", facing="up")
 TRIM = state("stone_bricks")
 BLACK = state("black_concrete")
+POLE = state("polished_andesite")
+WHEEL = state("black_concrete")
+HEADLIGHT = state("glowstone")
+TAILLIGHT = state("red_concrete")
 
-# apron / parking lot (y = 0), z in [0, WZ0)
+# ----------------------------------------------------------------------------
+# Foundation, parking lot, sidewalk
+# ----------------------------------------------------------------------------
+for x in range(SX):
+    for z in range(SZ):
+        for ry in range(-FOUND, 0):
+            put(x, ry, z, FOUNDATION)
+
 for x in range(SX):
     for z in range(0, WZ0):
         put(x, 0, z, APRON)
-for x in range(2, SX - 1, 5):
-    for z in range(1, 5):
-        put(x, 0, z, LINE)
+        for ry in range(1, 7):
+            put(x, ry, z, AIR)          # clears trees on the lot
 
-# curb in front of the building
-for x in range(WX0, WX1):
-    put(x, 0, WZ0 - 1, TRIM)
+# sidewalk (3 deep) and curb in front of the building
+for x in range(0, SX):
+    put(x, 0, WZ0 - 4, CURB)
+    for z in range(WZ0 - 3, WZ0):
+        put(x, 0, z, SIDEWALK)
 
-# building volume: floor, air, walls, roof
+# parking rows: row A z 1..5, row B z 9..13, row C z 17..21 (cars are 5 long)
+ROWS = [1, 9, 17]
+CAR_X0 = [3 + 5 * i for i in range(18)]          # cars are 3 wide, 2 gap
+for z0 in ROWS:
+    for x0 in CAR_X0:
+        for z in range(z0, z0 + 5):
+            put(x0 - 1, 0, z, LINE)
+for x0 in CAR_X0[-1:]:
+    for z0 in ROWS:
+        for z in range(z0, z0 + 5):
+            put(x0 + 3 + 1, 0, z, LINE)
+
+CAR_COLORS = ["red", "blue", "white", "black", "yellow", "lime", "orange", "gray",
+              "light_blue", "purple", "cyan", "brown", "magenta", "green", "light_gray"]
+
+
+def car(x0, z0, color, forward):
+    """3 wide (x), 5 long (z). forward = +1: nose towards +z, -1: nose towards -z."""
+    body = state(color + "_concrete")
+
+    def zz(k):                       # k = 0 is the tail, 4 is the nose
+        return z0 + k if forward > 0 else z0 + 4 - k
+
+    for dx in range(3):
+        for k in range(5):
+            put(x0 + dx, 1, zz(k), body)
+            put(x0 + dx, 2, zz(k), body)
+    for dx in (0, 2):                # wheels
+        for k in (1, 3):
+            put(x0 + dx, 1, zz(k), WHEEL)
+        put(x0 + dx, 2, zz(4), HEADLIGHT)
+        put(x0 + dx, 2, zz(0), TAILLIGHT)
+    for dx in range(3):              # trunk lid, cabin, roof
+        put(x0 + dx, 3, zz(0), body)
+        for k in (1, 2, 3):
+            put(x0 + dx, 3, zz(k), GLASS)
+            put(x0 + dx, 4, zz(k), body)
+
+
+for ri, z0 in enumerate(ROWS):
+    for x0 in CAR_X0:
+        if rng.random() < 0.3:
+            continue
+        car(x0, z0, rng.choice(CAR_COLORS), 1 if ri % 2 == 0 else -1)
+
+# lamp posts in the lanes
+for lane_z in (7, 15):
+    for x in (14, 39, 64, 89):
+        for ry in range(1, 7):
+            put(x, ry, lane_z, POLE)
+        put(x, 7, lane_z, LAMP)
+
+# ----------------------------------------------------------------------------
+# Building shell
+# ----------------------------------------------------------------------------
 for x in range(WX0, WX1):
     for z in range(WZ0, WZ1):
         edge = x in (WX0, WX1 - 1) or z in (WZ0, WZ1 - 1)
-        put(x, 0, z, FLOOR)
-        for y in range(1, ROOF):
-            put(x, y, z, WALL if edge else AIR)
+        put(x, 0, z, TILE_A if ((x // 4) + (z // 4)) % 2 == 0 else TILE_B)
+        for ry in range(1, ROOF):
+            put(x, ry, z, WALL if edge else AIR)
         put(x, ROOF, z, ROOFB)
-
-# parapet on the roof
-for x in range(WX0, WX1):
-    for z in range(WZ0, WZ1):
-        if x in (WX0, WX1 - 1) or z in (WZ0, WZ1 - 1):
+        if edge:
             put(x, ROOF + 1, z, TRIM)
 
-# blue band across the front: y 4..8 on the front wall
+# blue stripe along the side and back walls
 for x in range(WX0, WX1):
-    for y in range(4, ROOF + 1):
-        put(x, y, WZ0, BAND)
+    for z in range(WZ0, WZ1):
+        if x in (WX0, WX1 - 1) or z == WZ1 - 1:
+            put(x, 5, z, BAND)
+            put(x, 6, z, BAND)
 
-# glass storefront with two open doorways
-for x in range(WX0 + 4, WX1 - 4):
-    for y in range(1, 4):
-        put(x, y, WZ0, GLASS)
-cx = (WX0 + WX1) // 2            # centre x
-for dx in (-3, -2, 2, 3):
-    for y in range(1, 3):
-        put(cx + dx, y, WZ0, AIR)
+# front facade: blue band up to FACADE, glass storefront, entrance
+for x in range(WX0, WX1):
+    for ry in range(ROOF, FACADE + 1):
+        put(x, ry, WZ0, WALL)
+    for ry in range(5, FACADE + 1):
+        put(x, ry, WZ0, BAND)
+for x in range(WX0 + 3, WX1 - 3):
+    for ry in range(1, 5):
+        put(x, ry, WZ0, GLASS)
+for dx in range(-3, 3):                       # 6 wide entrance
+    for ry in range(1, 4):
+        put(cx + dx, ry, WZ0, AIR)
 
-# pixel sign: "AMERICIUM" + spark. 3x5 font, front face (z = WZ0 - 1 is outside),
-# the letters are placed on the band surface itself (z = WZ0), replacing blue blocks.
+# pixel sign: "AMERICIUM" + spark, 3x5 font drawn at scale 2
 FONT = {
     "A": ["010", "101", "111", "101", "101"],
     "M": ["101", "111", "111", "101", "101"],
@@ -175,71 +255,86 @@ FONT = {
 }
 TEXT = "AMERICIUM"
 SPARK_PIX = ["10101", "01110", "11111", "01110", "10101"]
-
-text_w = len(TEXT) * 3 + (len(TEXT) - 1)       # 35
-total_w = text_w + 3 + 5                       # text + gap + spark
-start_view = (WX1 - WX0 - total_w) // 2        # margin from the viewer's left edge
-# viewer-left corresponds to the largest x of the wall
-left_x = WX1 - 1 - start_view
-SIGN_Y_TOP = 8                                 # top row of the letters
+SCALE = 2
+ADV = 3 * SCALE + SCALE                       # letter width + gap
+text_w = len(TEXT) * ADV - SCALE              # 70
+total_w = text_w + 2 * SCALE + 5 * SCALE      # text + gap + spark = 84
+start_view = (WX1 - WX0 - total_w) // 2
+left_x = WX1 - 1 - start_view                 # viewer-left = largest x
+SIGN_TOP = 14
 
 
 def draw(pixels, col0, fill):
     for r, row in enumerate(pixels):
         for c, ch in enumerate(row):
-            if ch == "1":
-                put(left_x - (col0 + c), SIGN_Y_TOP - r, WZ0, fill)
+            if ch != "1":
+                continue
+            for dx in range(SCALE):
+                for dy in range(SCALE):
+                    put(left_x - (col0 + c * SCALE + dx), SIGN_TOP - (r * SCALE + dy), WZ0, fill)
 
 
-col = 0
 for i, letter in enumerate(TEXT):
-    draw(FONT[letter], col, LETTER)
-    col += 3 + 1
-draw(SPARK_PIX, text_w + 3, SPARK)
+    draw(FONT[letter], i * ADV, LETTER)
+draw(SPARK_PIX, text_w + 2 * SCALE, SPARK)
 
-# lighting: sea lanterns embedded in the ceiling
+# ceiling lights
 for x in range(WX0 + 3, WX1 - 2, 6):
     for z in range(WZ0 + 3, WZ1 - 2, 6):
         put(x, ROOF, z, LAMP)
 
-# checkout counters near the entrance (z = WZ0 + 4)
-for x in range(WX0 + 6, WX1 - 6, 6):
-    for dx in range(3):
-        put(x + dx, 1, WZ0 + 4, COUNTER)
-    put(x, 2, WZ0 + 4, BLACK)
+# checkout lanes
+LANES = [WX0 + 6 + 11 * k for k in range(8)]
+CASHIER_POS = []
+for x in LANES:
+    for dx in range(4):
+        put(x + dx, 1, WZ0 + 6, COUNTER)
+    put(x, 2, WZ0 + 6, BLACK)
+    CASHIER_POS.append((x + 1, 1, WZ0 + 7))
 
-# shelf rows (barrel + slab), running along x
-for z in (WZ0 + 9, WZ0 + 13, WZ0 + 17):
+# shelf rows with colourful goods
+WOOLS = ["red", "yellow", "lime", "orange", "light_blue", "pink", "white", "cyan", "purple"]
+SHELF_Z0 = [WZ0 + 14 + 6 * k for k in range(5)]
+for row, z0 in enumerate(SHELF_Z0):
     for x in range(WX0 + 4, WX1 - 4):
-        if (x - WX0) % 8 in (3, 4):
-            continue                           # gaps for walking
-        put(x, 1, z, BARREL)
-        put(x, 2, z, SLAB)
-
-# trader booths along the back wall: counter in front of each trader
-TRADER_X = [cx - 12, cx, cx + 12]
-for tx in TRADER_X:
-    for dx in range(-1, 2):
-        put(tx + dx, 1, WZ1 - 6, COUNTER)
-    put(tx, 1, WZ1 - 5, AIR)
-    put(tx, 2, WZ1 - 5, AIR)
-
-# cashier at the first counter
-CASHIER = (WX0 + 7, 1, WZ0 + 5)
-
+        if (x - WX0) % 12 >= 9:
+            continue                            # cross aisle
+        wool = state(WOOLS[(x // 3 + row) % len(WOOLS)] + "_wool")
+        for z in (z0, z0 + 1):
+            put(x, 1, z, BARREL)
+            put(x, 2, z, wool)
+            put(x, 3, z, SLAB)
 
 # ----------------------------------------------------------------------------
-# Traders (vanilla villagers with fixed offers; vanilla trading = server side)
+# Trading
 # ----------------------------------------------------------------------------
+BRONZE = "americium:americium_coin"           # worth 1
+SILVER = "americium:americium_silver_coin"    # worth 10
+GOLD = "americium:americium_gold_coin"        # worth 100
+
+
 def item(i, count):
     return {"id": i, "count": I(count)}
 
 
-def offer(buy, buy_count, sell, sell_count, max_uses=9999999):
-    return {
-        "buy": item(buy, buy_count),
-        "sell": item(sell, sell_count),
-        "maxUses": I(max_uses),
+def coin_stacks(units):
+    g, rem = divmod(units, 100)
+    s, b = divmod(rem, 10)
+    stacks = []
+    if g: stacks.append((GOLD, g))
+    if s: stacks.append((SILVER, s))
+    if b: stacks.append((BRONZE, b))
+    assert 1 <= len(stacks) <= 2, "price %d needs more than two coin types" % units
+    return stacks
+
+
+def trade(buy, sell):
+    """buy / sell: lists of (id, count); at most two buy stacks, one sell stack."""
+    assert len(buy) <= 2 and len(sell) == 1
+    t = {
+        "buy": item(*buy[0]),
+        "sell": item(*sell[0]),
+        "maxUses": I(9999999),
         "uses": I(0),
         "xp": I(0),
         "rewardExp": B(0),
@@ -247,83 +342,176 @@ def offer(buy, buy_count, sell, sell_count, max_uses=9999999):
         "demand": I(0),
         "specialPrice": I(0),
     }
+    if len(buy) == 2:
+        t["buyB"] = item(*buy[1])
+    return t
 
 
-COIN = "americium:americium_coin"
+def sell_for(units, product, count=1):
+    return trade(coin_stacks(units), [("minecraft:" + product, count)])
 
 
-def villager(name, profession, offers, pos, rot):
+def exchange(give, give_n, get, get_n):
+    return trade([(give, give_n)], [(get, get_n)])
+
+
+# Prices are in bronze coins (1 emerald = 10). Change them here and regenerate.
+DEPARTMENTS = [
+    ("Netherite Shop", "armorer", "black", [
+        ("netherite_scrap", 1, 160), ("netherite_ingot", 1, 450),
+        ("netherite_upgrade_smithing_template", 1, 300),
+        ("netherite_helmet", 1, 520), ("netherite_chestplate", 1, 640),
+        ("netherite_leggings", 1, 600), ("netherite_boots", 1, 500),
+        ("netherite_sword", 1, 520), ("netherite_pickaxe", 1, 520),
+        ("netherite_axe", 1, 520), ("netherite_shovel", 1, 400), ("netherite_hoe", 1, 360)]),
+    ("Grocery", "butcher", "orange", [
+        ("bread", 3, 10), ("apple", 3, 10), ("cooked_beef", 2, 20),
+        ("cooked_porkchop", 2, 20), ("cooked_chicken", 2, 20), ("baked_potato", 4, 10),
+        ("golden_carrot", 1, 40), ("cake", 1, 60), ("pumpkin_pie", 1, 30),
+        ("cookie", 8, 10), ("milk_bucket", 1, 30)]),
+    ("Clothing", "shepherd", "pink", [
+        ("leather_helmet", 1, 30), ("leather_chestplate", 1, 50),
+        ("leather_leggings", 1, 40), ("leather_boots", 1, 30),
+        ("white_wool", 4, 20), ("shears", 1, 20), ("white_bed", 1, 40),
+        ("leather_horse_armor", 1, 60)]),
+    ("Electronics", "toolsmith", "yellow", [
+        ("redstone", 8, 10), ("repeater", 1, 20), ("comparator", 1, 30),
+        ("piston", 1, 30), ("sticky_piston", 1, 50), ("observer", 1, 40),
+        ("hopper", 1, 50), ("daylight_detector", 1, 60), ("note_block", 1, 30),
+        ("jukebox", 1, 120), ("redstone_lamp", 1, 30), ("lever", 2, 10)]),
+    ("Pharmacy", "cleric", "white", [
+        ("golden_apple", 1, 200), ("honey_bottle", 1, 30),
+        ("glistering_melon_slice", 1, 40), ("sweet_berries", 4, 10),
+        ("dried_kelp", 8, 10), ("rabbit_stew", 1, 40), ("mushroom_stew", 1, 20),
+        ("beetroot_soup", 1, 20)]),
+    ("Garden Center", "farmer", "lime", [
+        ("wheat_seeds", 8, 10), ("beetroot_seeds", 8, 10), ("pumpkin_seeds", 4, 10),
+        ("melon_seeds", 4, 10), ("oak_sapling", 2, 10), ("birch_sapling", 2, 10),
+        ("bone_meal", 8, 20), ("iron_hoe", 1, 30), ("water_bucket", 1, 30),
+        ("poppy", 4, 10), ("sunflower", 2, 10), ("hay_block", 1, 30), ("composter", 1, 30)]),
+    ("Pet Shop", "leatherworker", "brown", [
+        ("wolf_spawn_egg", 1, 400), ("cat_spawn_egg", 1, 300),
+        ("parrot_spawn_egg", 1, 350), ("rabbit_spawn_egg", 1, 100),
+        ("horse_spawn_egg", 1, 500), ("bone", 8, 10), ("lead", 1, 20),
+        ("name_tag", 1, 60), ("saddle", 1, 300)]),
+    ("Sporting Goods", "fisherman", "light_blue", [
+        ("bow", 1, 40), ("arrow", 16, 20), ("crossbow", 1, 60), ("shield", 1, 50),
+        ("fishing_rod", 1, 30), ("spyglass", 1, 120), ("compass", 1, 40),
+        ("clock", 1, 40), ("snowball", 16, 10)]),
+    ("Auto Center", "weaponsmith", "gray", [
+        ("minecart", 1, 60), ("rail", 16, 60), ("powered_rail", 6, 80),
+        ("detector_rail", 6, 60), ("oak_boat", 1, 20), ("carrot_on_a_stick", 1, 40),
+        ("firework_rocket", 3, 30), ("elytra", 1, 2000)]),
+    ("Books & Stationery", "librarian", "purple", [
+        ("book", 1, 20), ("paper", 8, 10), ("writable_book", 1, 40),
+        ("ink_sac", 2, 10), ("feather", 4, 10), ("lectern", 1, 40),
+        ("bookshelf", 1, 40), ("map", 1, 20)]),
+    ("Home & Furniture", "mason", "red", [
+        ("chest", 1, 20), ("barrel", 1, 20), ("lantern", 1, 30), ("candle", 2, 10),
+        ("flower_pot", 1, 10), ("painting", 1, 20), ("item_frame", 1, 20),
+        ("crafting_table", 1, 20), ("furnace", 1, 20), ("glass", 8, 10),
+        ("oak_door", 3, 10), ("ladder", 8, 10)]),
+    ("Jewelry", "cleric", "cyan", [
+        ("gold_ingot", 1, 40), ("diamond", 1, 100), ("emerald", 1, 20),
+        ("amethyst_shard", 1, 20), ("lapis_lazuli", 4, 10), ("quartz", 4, 10),
+        ("iron_ingot", 2, 10), ("copper_ingot", 4, 10)]),
+    ("Villager Market", "fletcher", "magenta", [
+        ("villager_spawn_egg", 1, 600)]),
+]
+
+CHANGE = [
+    exchange(BRONZE, 10, SILVER, 1), exchange(SILVER, 10, GOLD, 1),
+    exchange(SILVER, 1, BRONZE, 10), exchange(GOLD, 1, SILVER, 10),
+]
+BANK = CHANGE + [
+    exchange("minecraft:emerald", 1, SILVER, 1),
+    exchange("minecraft:diamond", 1, SILVER, 6),
+    exchange("minecraft:gold_ingot", 1, SILVER, 3),
+    exchange("minecraft:netherite_ingot", 1, GOLD, 4),
+]
+
+
+def villager(name, profession, offers, pos, rot, vtype="plains", level=5, silent=True):
     nbt = {
         "id": "minecraft:villager",
         "NoAI": B(1),
         "Invulnerable": B(1),
         "PersistenceRequired": B(1),
-        "Silent": B(1),
-        "CustomName": name,
-        "CustomNameVisible": B(1),
+        "Silent": B(1 if silent else 0),
         "Rotation": L(TAG_FLOAT, [F(rot), F(0.0)]),
-        "Xp": I(1000),
         "VillagerData": {
-            "level": I(5),
+            "level": I(level),
             "profession": "minecraft:" + profession,
-            "type": "minecraft:plains",
+            "type": "minecraft:" + vtype,
         },
-        "Offers": {"Recipes": L(TAG_COMPOUND, offers)},
     }
+    if name:
+        nbt["CustomName"] = name
+        nbt["CustomNameVisible"] = B(1)
+    if offers:
+        nbt["Xp"] = I(1000)
+        nbt["Offers"] = {"Recipes": L(TAG_COMPOUND, offers)}
     bx, by, bz = pos
     return {
-        "pos": L(TAG_DOUBLE, [D(bx + 0.5), D(by), D(bz + 0.5)]),
-        "blockPos": L(TAG_INT, [I(bx), I(by), I(bz)]),
+        "pos": L(TAG_DOUBLE, [D(bx + 0.5), D(by + FOUND), D(bz + 0.5)]),
+        "blockPos": L(TAG_INT, [I(bx), I(by + FOUND), I(bz)]),
         "nbt": nbt,
     }
 
 
-# Prices are placeholders for a survival SMP; change them here and regenerate.
-NETHERITE = [
-    ("minecraft:netherite_scrap", 1, 16),
-    ("minecraft:netherite_ingot", 1, 48),
-    ("minecraft:netherite_upgrade_smithing_template", 1, 32),
-    ("minecraft:netherite_helmet", 1, 56),
-    ("minecraft:netherite_chestplate", 1, 64),
-    ("minecraft:netherite_leggings", 1, 60),
-    ("minecraft:netherite_boots", 1, 52),
-    ("minecraft:netherite_sword", 1, 52),
-    ("minecraft:netherite_pickaxe", 1, 52),
-    ("minecraft:netherite_axe", 1, 52),
-    ("minecraft:netherite_shovel", 1, 40),
-    ("minecraft:netherite_hoe", 1, 36),
-]
-netherite_offers = [offer(COIN, price, it, n) for it, n, price in NETHERITE]
+entities = []
 
-# Villager spawn eggs: using the egg spawns a normal villager at the player.
-VILLAGERS = [offer(COIN, 64, "minecraft:villager_spawn_egg", 1)]
+# departments along the back wall: counter in front, coloured sign band behind
+all_traders = DEPARTMENTS + [("Currency Exchange", "librarian", "blue", None)]
+TRADER_X = [9 + 6 * k for k in range(len(all_traders))]
+for tx, (name, prof, color, goods) in zip(TRADER_X, all_traders):
+    for dx in range(-1, 2):
+        put(tx + dx, 1, WZ1 - 7, COUNTER)
+    for dx in range(-2, 3):
+        for ry in range(3, 7):
+            put(tx + dx, ry, WZ1 - 1, state(color + "_concrete"))
+    offers = BANK if goods is None else [sell_for(p, it, n) for it, n, p in goods]
+    entities.append(villager(name, prof, offers, (tx, 1, WZ1 - 6), 180.0))
 
-# Currency exchange: emeralds and diamonds for coins.
-EXCHANGE = [
-    offer("minecraft:emerald", 1, COIN, 1),
-    offer("minecraft:diamond", 1, COIN, 6),
-    offer("minecraft:netherite_ingot", 1, COIN, 40),
-]
+# cashiers at the checkout lanes: make change
+for pos in CASHIER_POS:
+    entities.append(villager("Cashier", "cartographer", CHANGE, pos, 180.0))
 
-entities = [
-    villager("Netherite Shop", "armorer", netherite_offers,
-             (TRADER_X[0], 1, WZ1 - 5), 180.0),
-    villager("Villager Market", "librarian", VILLAGERS,
-             (TRADER_X[1], 1, WZ1 - 5), 180.0),
-    villager("Currency Exchange", "cleric", EXCHANGE,
-             (TRADER_X[2], 1, WZ1 - 5), 180.0),
-    villager("Cashier", "cartographer", EXCHANGE,
-             CASHIER, 180.0),
-]
+# shoppers: no trades, not silent, so they mumble like normal villagers
+TYPES = ["plains", "desert", "jungle", "savanna", "snow", "swamp", "taiga"]
+JOBS = ["none", "none", "none", "nitwit", "farmer", "librarian", "shepherd", "butcher"]
+taken = set(CASHIER_POS)
+aisles = []
+for z0 in SHELF_Z0[:-1]:
+    aisles += [z0 + 2, z0 + 3, z0 + 4, z0 + 5]
+aisles += [WZ0 + 9, WZ0 + 10, WZ0 + 11, WZ1 - 14, WZ1 - 13, WZ1 - 12]
+placed = 0
+while placed < 44:
+    x = rng.randint(WX0 + 3, WX1 - 4)
+    z = rng.choice(aisles)
+    if (x, 1, z) in taken:
+        continue
+    taken.add((x, 1, z))
+    entities.append(villager(None, rng.choice(JOBS), None, (x, 1, z),
+                             float(rng.randint(0, 359)), rng.choice(TYPES), level=1, silent=False))
+    placed += 1
+
+# shopping carts at the entrance
+for k in range(8):
+    bx, bz = cx - 12 + 3 * k, WZ0 + 2
+    entities.append({
+        "pos": L(TAG_DOUBLE, [D(bx + 0.5), D(1 + FOUND), D(bz + 0.5)]),
+        "blockPos": L(TAG_INT, [I(bx), I(1 + FOUND), I(bz)]),
+        "nbt": {"id": "minecraft:minecart"},
+    })
+
 
 # ----------------------------------------------------------------------------
 # Serialise
 # ----------------------------------------------------------------------------
 def main():
     data_version = int(sys.argv[1])
-    keys = []
-    index = {}
-    out_blocks = []
+    keys, index, out_blocks = [], {}, []
     for (x, y, z), st in sorted(blocks.items(), key=lambda kv: (kv[0][1], kv[0][2], kv[0][0])):
         assert 0 <= x < SX and 0 <= y < SY and 0 <= z < SZ, (x, y, z)
         if st not in index:
@@ -346,13 +534,14 @@ def main():
         "blocks": L(TAG_COMPOUND, out_blocks),
         "entities": L(TAG_COMPOUND, entities),
     }
-    target = os.path.join(os.path.dirname(__file__), "..", "src", "main", "resources",
-                          "data", "americium", "structure", "store", "main.nbt")
-    target = os.path.normpath(target)
+    target = os.path.normpath(os.path.join(
+        os.path.dirname(__file__), "..", "src", "main", "resources",
+        "data", "americium", "structure", "store", "main.nbt"))
     os.makedirs(os.path.dirname(target), exist_ok=True)
     with gzip.GzipFile(target, "wb", mtime=0) as f:
         f.write(nbt_bytes(root))
-    print("wrote", target, len(out_blocks), "blocks,", len(entities), "entities")
+    print("wrote", target, len(out_blocks), "blocks,", len(entities), "entities,",
+          os.path.getsize(target) // 1024, "KB")
 
 
 if __name__ == "__main__":

@@ -59,43 +59,55 @@ def rcon(sock, rid, ptype, body):
 s = socket.create_connection(("127.0.0.1", 25575), timeout=120)
 rcon(s, 1, 3, "ci")
 cmds = [
-    ("forceload", "forceload add -64 -64 112 112"),
-    ("wait-load", 30),
-    ("loaded-q", "forceload query 0 0"),
-    ("loaded-if", "execute in minecraft:overworld if loaded 24 80 24"),
+    ("forceload", "forceload add -96 -96 128 128"),
+    ("wait-load", 40),
+    ("ground", "execute in minecraft:overworld positioned 24 0 24 over world_surface run summon minecraft:marker ~ ~ ~ {Tags:[\"g\"]}"),
+    ("ground-pos", "data get entity @e[type=minecraft:marker,tag=g,limit=1] Pos"),
     ("place", "RETRY execute in minecraft:overworld run place structure americium:store 24 80 24"),
     ("wait", None),
-    ("pos", "data get entity @e[type=minecraft:villager,limit=1,sort=nearest,x=24,y=80,z=24] Pos"),
-    ("COUNT", None),
-    ("probe", "execute in minecraft:overworld if block 28 61 8 minecraft:light_gray_concrete"),
-    ("template-place", "RETRY execute in minecraft:overworld run place template americium:store/main 8 150 8"),
-    ("COUNT2", None),
-    ("probe-apron", "execute in minecraft:overworld if block 8 150 8 minecraft:gray_concrete"),
-    ("probe-floor", "execute in minecraft:overworld if block 9 150 15 minecraft:light_gray_concrete"),
-    ("probe-set", "execute in minecraft:overworld run setblock 10 151 10 minecraft:gray_concrete"),
-    ("probe-set-check", "execute in minecraft:overworld if block 10 151 10 minecraft:gray_concrete"),
     ("villager-count", "execute in minecraft:overworld if entity @e[type=minecraft:villager]"),
-    ("offers", "data get entity @e[type=minecraft:villager,limit=1,sort=nearest,x=24,y=80,z=24] Offers"),
-    ("name", "data get entity @e[type=minecraft:villager,limit=1,sort=nearest,x=24,y=80,z=24] CustomName"),
+    ("minecarts", "execute in minecraft:overworld if entity @e[type=minecraft:minecart]"),
+    ("cashier-pos", "data get entity @e[type=minecraft:villager,name=\"Cashier\",limit=1] Pos"),
+    ("grocery", "data get entity @e[type=minecraft:villager,name=\"Grocery\",limit=1] Offers[0]"),
+    ("netherite", "data get entity @e[type=minecraft:villager,name=\"Netherite Shop\",limit=1] Offers[1]"),
+    ("exchange", "data get entity @e[type=minecraft:villager,name=\"Currency Exchange\",limit=1] Offers[7]"),
+    ("LAYERS", None),
+    ("COUNT", None),
     ("locate", "locate structure americium:store"),
     ("old-camp", "locate structure minecraft:abandoned_camp_forest"),
 ]
 for title, cmd in cmds:
-    if title in ("COUNT", "COUNT2"):
-        totals = {}
-        yrange = range(0, 192, 8) if title == "COUNT" else range(144, 176, 8)
-        for blk in ("gray_concrete", "light_gray_concrete", "blue_concrete", "white_concrete", "sea_lantern"):
+    if title == "LAYERS":
+        layers = {}
+        for y in range(40, 111):
             n = 0
-            for y0 in yrange:
+            for (xa, xb) in ((-96, 16), (17, 128)):
                 try:
-                    _, o = rcon(s, 2, 2, "execute in minecraft:overworld run fill 0 %d 0 63 %d 63 minecraft:air replace minecraft:%s" % (y0, y0 + 7, blk))
-                except Exception as e:  # noqa
+                    _, o = rcon(s, 2, 2, "execute in minecraft:overworld run fill %d %d -96 %d %d 128 minecraft:air replace minecraft:gray_concrete" % (xa, y, xb, y))
+                except Exception:
                     o = ""
                 m = re.search(r"filled (\d+)", o)
                 if m:
                     n += int(m.group(1))
+            if n:
+                layers[y] = n
+        note("notice", "smoke-apron-layers", "gray_concrete (apron, the floor level) per y: %r" % layers)
+        continue
+    if title == "COUNT":
+        totals = {}
+        for blk in ("light_gray_concrete", "blue_concrete", "glowstone", "polished_andesite", "barrel"):
+            n = 0
+            for y0 in range(40, 111):
+                for (xa, xb) in ((-96, 16), (17, 128)):
+                    try:
+                        _, o = rcon(s, 2, 2, "execute in minecraft:overworld run fill %d %d -96 %d %d 128 minecraft:air replace minecraft:%s" % (xa, y0, xb, y0, blk))
+                    except Exception:
+                        o = ""
+                    m = re.search(r"filled (\d+)", o)
+                    if m:
+                        n += int(m.group(1))
             totals[blk] = n
-        note("notice", "smoke-blocks-" + title, "blocks found after place (x 0..63, z 0..63, y 0..191): %r" % totals)
+        note("notice", "smoke-blocks", "blocks found: %r" % totals)
         continue
     if cmd is None or isinstance(cmd, int):
         time.sleep(cmd or 5)
