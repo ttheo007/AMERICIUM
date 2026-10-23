@@ -10,7 +10,7 @@ AMERICIUM replaces the new "Abandoned Camps" structure with American-style super
 - The store is 95 x 82 blocks: a parking lot with a few cars and lamp posts, a yellow walkway and a red carpet to a framed, canopied entrance with an ENTRANCE sign, a glass front, a blue sign (AMERICIUM and a yellow spark) and shelf aisles. It sits on a foundation, so the floor is level with the terrain.
 - **Currency:** bronze coin (1), silver coin (10), gold coin (100). They are in the creative inventory under Ingredients.
 - **Self service shelves:** every shelf is a barrel with the product floating above it and a price tag. Take what you want. About 100 products in 11 departments.
-- **Pay when you leave:** when you enter the store area the mod remembers what you carry. At the exit gate (the entrance) it adds up everything you carry above that, takes the coins from your inventory and gives change. If you cannot pay, the goods are taken away again.
+- **Pay when you leave:** when you enter the store area (naturally generated stores, or stores placed with `/place`, which use invisible zone markers) the mod remembers what you carry. At the exit gate (the entrance) it adds up everything you carry above that, takes the coins from your inventory and gives change. If you cannot pay, the goods are taken away again.
 - **Stock clerks** walk through the aisles and refill the shelves next to them.
 - **Shoppers and clerks** are villagers with AI: they walk around and make normal villager sounds. A function sends them back if they reach the door.
 - **Trading villagers** (fixed in place): Pet Shop and Villager Market inside, and two Currency Exchange villagers outside the gate (emerald, diamond, gold ingot or netherite ingot into coins, and change making).

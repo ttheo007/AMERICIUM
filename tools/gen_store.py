@@ -552,6 +552,12 @@ for x in range(WX0 + 8, WX1 - 6, 12):
     entities.append(marker(x, 1, WZ0 + 10, "am_aisle"))
     entities.append(marker(x, 1, WZ1 - 13, "am_aisle"))
 
+# zone markers: cover the store and the lot, so the shop logic also works for stores
+# placed with /place (that command does not register the structure in the world)
+for zx in range(8, SX, 16):
+    for zz in range(8, SZ, 16):
+        entities.append(marker(zx, 1, zz, "am_zone_marker"))
+
 # entrance sign above the canopy
 entities.append(text_display(cx, 6.6, WZ0 - 3, "§l§eENTRANCE", 4.0))
 entities.append(text_display(cx, 5.8, WZ0 - 3, "§fOpen §a24/7", 1.6))

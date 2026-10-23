@@ -84,6 +84,7 @@ cmds = [
     ("ground-pos", "data get entity @e[type=minecraft:marker,tag=g,limit=1] Pos"),
     ("place", "RETRY execute in minecraft:overworld run place structure americium:store 24 80 24"),
     ("wait", None),
+    ("zone-markers", "execute in minecraft:overworld if entity @e[type=minecraft:marker,tag=am_zone_marker]"),
     ("villagers", "execute in minecraft:overworld if entity @e[type=minecraft:villager]"),
     ("minecarts", "execute in minecraft:overworld if entity @e[type=minecraft:minecart]"),
     ("item-displays", "execute in minecraft:overworld if entity @e[type=minecraft:item_display,tag=am_shelf]"),
