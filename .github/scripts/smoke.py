@@ -22,7 +22,7 @@ def note(level, title, text):
     if level == "error":
         print("::%s title=%s::%s" % (level, title, esc(text[:3800])), flush=True)
     else:
-        RESULTS.append("[%s] %s" % (title.replace("smoke-", ""), text[:700]))
+        RESULTS.append("[%s] %s" % (title.replace("smoke-", ""), text[:(2600 if title.startswith("smoke-dump") else 700)]))
 
 
 def flush_results():
@@ -113,6 +113,14 @@ cmds = [
     ("slow-run", "function americium:slow"),
     ("wait-move", 25),
     ("clerk-pos-2", "data get entity @e[type=minecraft:villager,tag=am_stocker,limit=1] Pos"),
+    ("dump-clerk", "data get entity @e[type=minecraft:villager,tag=am_stocker,limit=1]"),
+    ("dump-brain-1", "data get entity @e[type=minecraft:villager,tag=am_stocker,limit=1] Brain"),
+    ("w1", 3),
+    ("dump-brain-2", "data get entity @e[type=minecraft:villager,tag=am_stocker,limit=1] Brain.memories"),
+    ("w2", 3),
+    ("dump-brain-3", "data get entity @e[type=minecraft:villager,tag=am_stocker,limit=1] Brain.memories"),
+    ("w3", 3),
+    ("dump-brain-4", "data get entity @e[type=minecraft:villager,tag=am_stocker,limit=1] Brain.memories"),
     ("LAYERS", None),
     ("locate", "locate structure americium:store"),
     ("old-camp", "locate structure minecraft:abandoned_camp_forest"),
