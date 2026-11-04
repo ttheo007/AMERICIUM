@@ -21,6 +21,7 @@ def javap(cls, pattern=None):
         lines = [l for l in lines if re.search(pattern, l) or l.startswith("public class") or l.startswith("public abstract class")]
     return "\n".join(lines)
 
+notice("jp-slot", javap("net.minecraft.world.inventory.Slot", r"mayPickup|mayPlace|class"))
 notice("jp-crafting-menu", javap("net.minecraft.world.inventory.CraftingMenu"))
 notice("jp-inventory-menu", javap("net.minecraft.world.inventory.InventoryMenu", r"slotsChanged|Craft|craft|\(.*Player"))
 notice("jp-result-slot", javap("net.minecraft.world.inventory.ResultSlot"))

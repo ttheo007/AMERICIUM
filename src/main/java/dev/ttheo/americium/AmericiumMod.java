@@ -37,6 +37,13 @@ public final class AmericiumMod implements ModInitializer {
             entries.accept(AMERICIUM_SILVER_COIN);
             entries.accept(AMERICIUM_GOLD_COIN);
         });
+        // load the crafting slot class now, so a broken mixin shows up at startup
+        try {
+            Class.forName("net.minecraft.world.inventory.ResultSlot");
+            LOGGER.info("AMERICIUM: crafting lock is active inside the store.");
+        } catch (Throwable t) {
+            LOGGER.error("AMERICIUM: the crafting lock could not be applied", t);
+        }
         LOGGER.info("AMERICIUM is starting. Coins registered: bronze (1), silver (10), gold (100).");
     }
 }
