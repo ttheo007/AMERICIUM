@@ -40,6 +40,10 @@ jobs:
         if: always()
         continue-on-error: true
         run: python3 .github/scripts/nbtdump.py
+      - name: Print Minecraft class signatures
+        if: always()
+        continue-on-error: true
+        run: python3 .github/scripts/javap.py
       - name: Server smoke test
         if: always()
         continue-on-error: true

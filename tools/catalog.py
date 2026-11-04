@@ -63,11 +63,12 @@ DEPARTMENTS = [
 
 
 def stock_of(item):
+    """Maximum stack size: one shelf stack holds this many pieces."""
     if item in STACK1:
         return 1
     if item in STACK16:
         return 16
-    return 16
+    return 64
 
 
 def pretty(item):
@@ -100,6 +101,24 @@ def unique_items():
     for _, _, item, price in products():
         seen.setdefault(item, price)
     return list(seen.items())
+
+# dye colour of each department wool -> RGB (for signs and floor stripes)
+RGB = {
+    "orange": (216, 127, 51), "pink": (237, 141, 172), "yellow": (229, 229, 51),
+    "white": (255, 255, 255), "lime": (127, 204, 25), "light_blue": (102, 153, 216),
+    "gray": (76, 76, 76), "purple": (127, 63, 178), "red": (153, 51, 51),
+    "cyan": (76, 127, 153), "brown": (102, 76, 51),
+}
+
+# which departments share an aisle (one list per shelf row, front to back)
+ROWS = [
+    ["Grocery", "Pharmacy"],
+    ["Electronics", "Books & Stationery"],
+    ["Garden Center", "Hardware"],
+    ["Clothing", "Jewelry"],
+    ["Sporting Goods", "Auto Center"],
+    ["Home & Furniture"],
+]
 
 
 if __name__ == "__main__":

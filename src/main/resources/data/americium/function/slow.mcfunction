@@ -7,8 +7,13 @@ execute as @a[tag=am_zone,tag=!am_in] at @s run function americium:enter
 execute as @a[tag=am_in,tag=!am_zone] at @s run function americium:leave
 # self checkout at the exit gate
 execute as @a[tag=am_in] at @s if entity @e[type=marker,tag=am_exit_gate,distance=..3] run function americium:checkout
-# keep the store villagers inside
-execute as @e[type=villager,tag=am_npc] at @s if entity @e[type=marker,tag=am_exit_gate,distance=..2.5] run tp @s @e[type=marker,tag=am_aisle,sort=random,limit=1]
+# keep the store staff and shoppers inside
+execute as @e[tag=am_npc] at @s if entity @e[type=marker,tag=am_exit_gate,distance=..2.5] run tp @s @e[type=marker,tag=am_aisle,sort=random,limit=1]
+# wandering traders drink an invisibility potion at night: undo that
+effect clear @e[type=wandering_trader,tag=am_stocker] minecraft:invisibility
 # stock clerks refill the shelves they are next to, every 8 rounds (about 2 seconds)
 scoreboard players add #rs am_tmp 1
 execute if score #rs am_tmp matches 8.. run function americium:restock
+# delivery: every 120 rounds (about 30 seconds) all shelves below 7 stacks are refilled
+scoreboard players add #gs am_tmp 1
+execute if score #gs am_tmp matches 120.. run function americium:restock_all

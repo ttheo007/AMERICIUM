@@ -1,5 +1,6 @@
 scoreboard objectives add am_tmp dummy
 scoreboard objectives add am_const dummy
+scoreboard objectives add am_n dummy
 scoreboard players set #100 am_const 100
 scoreboard players set #10 am_const 10
 scoreboard objectives add am_b0 dummy

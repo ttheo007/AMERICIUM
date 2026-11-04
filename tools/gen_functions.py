@@ -12,7 +12,9 @@ How it works
   area, everything carried above the snapshot is added up with the catalogue prices.
 - If the player has enough coins they are paid (change is given back), otherwise the
   surplus goods are taken away again.
-- Stock clerks (villagers tagged am_stocker) refill the shelves they walk past.
+- Stock clerks (wandering traders tagged am_stocker) refill the shelves they walk past;
+  every 30 seconds all shelves below 7 stacks are refilled to 10.
+- Survival players are put in adventure mode inside the store (no breaking blocks).
 """
 import json
 import os
@@ -44,6 +46,7 @@ def fn(name, lines):
 load = [
     "scoreboard objectives add am_tmp dummy",
     "scoreboard objectives add am_const dummy",
+    "scoreboard objectives add am_n dummy",
     "scoreboard players set #100 am_const 100",
     "scoreboard players set #10 am_const 10",
 ]
@@ -67,22 +70,35 @@ fn("slow", [
     "execute as @a[tag=am_in,tag=!am_zone] at @s run function americium:leave",
     "# self checkout at the exit gate",
     "execute as @a[tag=am_in] at @s if entity @e[type=marker,tag=am_exit_gate,distance=..3] run function americium:checkout",
-    "# keep the store villagers inside",
-    "execute as @e[type=villager,tag=am_npc] at @s if entity @e[type=marker,tag=am_exit_gate,distance=..2.5] run tp @s @e[type=marker,tag=am_aisle,sort=random,limit=1]",
+    "# keep the store staff and shoppers inside",
+    "execute as @e[tag=am_npc] at @s if entity @e[type=marker,tag=am_exit_gate,distance=..2.5] run tp @s @e[type=marker,tag=am_aisle,sort=random,limit=1]",
+    "# wandering traders drink an invisibility potion at night: undo that",
+    "effect clear @e[type=wandering_trader,tag=am_stocker] minecraft:invisibility",
     "# stock clerks refill the shelves they are next to, every 8 rounds (about 2 seconds)",
     "scoreboard players add #rs am_tmp 1",
     "execute if score #rs am_tmp matches 8.. run function americium:restock",
+    "# delivery: every 120 rounds (about 30 seconds) all shelves below 7 stacks are refilled",
+    "scoreboard players add #gs am_tmp 1",
+    "execute if score #gs am_tmp matches 120.. run function americium:restock_all",
 ])
 
 # --- enter / leave ------------------------------------------------------------
 fn("enter", [
     "tag @s add am_in",
     "function americium:snapshot",
+    "# survival players cannot break or place blocks inside the store (adventure mode)",
+    "execute if entity @s[gamemode=survival] run function americium:to_adventure",
     'title @s actionbar {"text":"Welcome! Take what you like from the shelves. You pay automatically at the exit.","color":"gold"}',
+])
+fn("to_adventure", [
+    "gamemode adventure @s",
+    "tag @s add am_adv",
 ])
 fn("leave", [
     "function americium:checkout",
     "tag @s remove am_in",
+    "execute if entity @s[tag=am_adv,gamemode=adventure] run gamemode survival @s",
+    "tag @s remove am_adv",
 ])
 
 # --- snapshot -----------------------------------------------------------------
@@ -178,12 +194,23 @@ fn("pay_fail", pf)
 fn("rm", ["$clear @s $(item) $(n)"])
 
 # --- restock ------------------------------------------------------------------
+# A shelf barrel always holds 7 to 10 stacks: below 7 it is refilled to 10 full stacks.
 fn("restock", [
     "scoreboard players set #rs am_tmp 0",
-    "execute as @e[type=villager,tag=am_stocker] at @s as @e[type=item_display,tag=am_shelf,distance=..7] at @s run function americium:restock_one with entity @s item",
+    "execute as @e[tag=am_stocker] at @s as @e[type=item_display,tag=am_shelf,distance=..9] at @s run function americium:restock_one with entity @s item",
+])
+fn("restock_all", [
+    "scoreboard players set #gs am_tmp 0",
+    "execute as @e[type=item_display,tag=am_shelf] at @s run function americium:restock_one with entity @s item",
 ])
 fn("restock_one", [
-    "$execute positioned ~ ~-3 ~ run item replace block ~ ~ ~ container.0 with $(id) $(count)",
+    "scoreboard players set #n am_tmp 0",
+    "execute positioned ~ ~-3 ~ store result score #n am_tmp run data get block ~ ~ ~ Items",
+    "execute if score #n am_tmp matches ..6 run function americium:fill with entity @s item",
+])
+fn("fill", [
+    "$execute positioned ~ ~-3 ~ run data modify block ~ ~ ~ Items set value ["
+    + ",".join('{Slot:%db,id:"$(id)",count:$(count)}' % k for k in range(10)) + "]",
 ])
 
 # --- predicate and tags ---------------------------------------------------------

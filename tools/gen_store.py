@@ -129,7 +129,7 @@ BAND = state("blue_concrete")
 LETTER = state("white_concrete")
 SPARK = state("yellow_concrete")
 GLASS = state("glass")
-ROOFB = state("light_gray_concrete")
+ROOFB = state("white_concrete")
 LAMP = state("sea_lantern")
 COUNTER = state("smooth_stone")
 SLAB = state("smooth_stone_slab", type="bottom")
@@ -221,7 +221,7 @@ for lane_z in (7, 15):
 for x in range(WX0, WX1):
     for z in range(WZ0, WZ1):
         edge = x in (WX0, WX1 - 1) or z in (WZ0, WZ1 - 1)
-        put(x, 0, z, TILE_A if ((x // 4) + (z // 4)) % 2 == 0 else TILE_B)
+        put(x, 0, z, TILE_A)
         for ry in range(1, ROOF):
             put(x, ry, z, WALL if edge else AIR)
         put(x, ROOF, z, ROOFB)
@@ -343,15 +343,22 @@ def transform(scale):
     }
 
 
-def text_display(x, y, z, text, scale=1.0):
-    return pos_entity(x, y, z, {
+def text_display(x, y, z, text, scale=1.0, view=None, bg=None, tag_names=()):
+    nbt = {
         "id": "minecraft:text_display",
         "text": text,
         "billboard": "center",
         "alignment": "center",
         "line_width": I(220),
         "transformation": transform(scale),
-    })
+    }
+    if view is not None:
+        nbt["view_range"] = F(view)
+    if bg is not None:
+        nbt["background"] = I(bg)
+    if tag_names:
+        nbt["Tags"] = tags(*tag_names)
+    return pos_entity(x, y, z, nbt)
 
 
 def marker(x, y, z, *tag_names):
@@ -359,53 +366,95 @@ def marker(x, y, z, *tag_names):
 
 
 # ----------------------------------------------------------------------------
-# Shelves: a barrel per product, floating item and price tag above it
+# Shelves: one aisle per row, departments side by side, a barrel with 7 to 10
+# stacks per product
 # ----------------------------------------------------------------------------
-WOOLS_BY_NAME = {d: c for d, c, _ in catalog.DEPARTMENTS}
-SHELF_Z0 = [WZ0 + 14 + 6 * k for k in range(5)]
 PLANKS = state("oak_planks")
-
+SHELF_Z0 = [WZ0 + 14 + 6 * k for k in range(len(catalog.ROWS))]
 unit_xs = [x for x in range(WX0 + 4, WX1 - 4)
            if (x - WX0) % 12 < 9 and (x - WX0) % 3 == 1]
-slots = [(z0, x) for z0 in SHELF_Z0 for x in unit_xs]
-prods = catalog.products()
-assert len(prods) <= len(slots), (len(prods), len(slots))
 
-# default shelf shell for every position in the rows
-for row, z0 in enumerate(SHELF_Z0):
-    for x in range(WX0 + 4, WX1 - 4):
-        if (x - WX0) % 12 >= 9:
-            continue                                # cross aisle
-        for z in (z0, z0 + 1):
-            put(x, 1, z, PLANKS)
-            put(x, 2, z, PLANKS)
-            put(x, 3, z, SLAB)
+dept_products = {}
+for _d, _c, _item, _price in catalog.products():
+    dept_products.setdefault(_d, []).append((_item, _price))
+dept_colour = {d: c for d, c, _ in catalog.DEPARTMENTS}
 
-last_dept = None
-for (z0, x), (dept, colour, item, price) in zip(slots, prods):
-    stock = catalog.stock_of(item)
-    shelf_wool = state(colour + "_wool")
-    put(x, 2, z0, shelf_wool)
-    put(x, 1, z0, BARREL)
-    block_nbt[(x, 1 + FOUND, z0)] = {
-        "id": "minecraft:barrel",
-        "Items": L(TAG_COMPOUND, [{"Slot": B(0), "id": "minecraft:" + item, "count": I(stock)}]),
-    }
-    # floating product (also the marker the stock clerks look for)
-    entities.append(pos_entity(x, 4.5, z0, {
-        "id": "minecraft:item_display",
-        "Tags": tags("am_shelf"),
-        "item": {"id": "minecraft:" + item, "count": I(stock)},
-        "item_display": "fixed",
-        "billboard": "center",
-        "transformation": transform(0.7),
-    }))
-    entities.append(text_display(
-        x, 5.4, z0,
-        "§f%s\n§e%s" % (catalog.pretty(item), catalog.fmt(price)), 0.8))
-    if dept != last_dept:                           # department sign at the first shelf
-        entities.append(text_display(x, 7.2, z0, "§l§6" + dept.upper(), 2.2))
-        last_dept = dept
+
+def signed(argb):
+    return argb - (1 << 32) if argb >= (1 << 31) else argb
+
+
+def banner(dept):
+    """(ARGB background as signed int, legacy text colour code) for a department sign."""
+    r, g, b = catalog.RGB[dept_colour[dept]]
+    lum = 0.299 * r + 0.587 * g + 0.114 * b
+    return signed((0xE0 << 24) | (r << 16) | (g << 8) | b), ("§0" if lum > 140 else "§f")
+
+
+directory = []                                      # (aisle number, [department names])
+for row, (z0, depts) in enumerate(zip(SHELF_Z0, catalog.ROWS)):
+    cursor = 0
+    directory.append((row + 1, depts))
+    entities.append(text_display(WX0 + 3, 6.0, z0, "§l§fAISLE %d" % (row + 1), 2.2,
+                                 bg=signed(0xC0000000)))
+    entities.append(text_display(WX1 - 4, 6.0, z0, "§l§fAISLE %d" % (row + 1), 2.2,
+                                 bg=signed(0xC0000000)))
+    for dept in depts:
+        plist = dept_products[dept]
+        assert cursor + len(plist) <= len(unit_xs), (dept, cursor, len(plist), len(unit_xs))
+        xs = unit_xs[cursor:cursor + len(plist)]
+        cursor += len(plist) + 1                    # one empty unit between departments
+        colour = dept_colour[dept]
+        shelf_wool = state(colour + "_wool")
+        stripe = state(colour + "_concrete")
+
+        for x_u in xs:                              # shelf body, 3 wide per product
+            for dx in (-1, 0, 1):
+                for z in (z0, z0 + 1):
+                    put(x_u + dx, 1, z, PLANKS)
+                    put(x_u + dx, 2, z, PLANKS)
+                    put(x_u + dx, 3, z, SLAB)
+        for x in range(xs[0] - 1, xs[-1] + 2):      # coloured stripe on the floor in front
+            put(x, 0, z0 - 1, stripe)
+
+        for x_u, (item_id, price) in zip(xs, plist):
+            stack = catalog.stock_of(item_id)
+            n_stacks = rng.randint(7, 10)
+            put(x_u, 2, z0, shelf_wool)
+            put(x_u, 1, z0, BARREL)
+            block_nbt[(x_u, 1 + FOUND, z0)] = {
+                "id": "minecraft:barrel",
+                "Items": L(TAG_COMPOUND, [
+                    {"Slot": B(k), "id": "minecraft:" + item_id, "count": I(stack)}
+                    for k in range(n_stacks)]),
+            }
+            # floating product (also the marker the stock clerks and the restock look for)
+            entities.append(pos_entity(x_u, 4.5, z0, {
+                "id": "minecraft:item_display",
+                "Tags": tags("am_shelf"),
+                "item": {"id": "minecraft:" + item_id, "count": I(stack)},
+                "item_display": "fixed",
+                "billboard": "center",
+                "view_range": F(0.12),
+                "transformation": transform(0.7),
+            }))
+            entities.append(text_display(
+                x_u, 5.4, z0,
+                "§f%s\n§e%s" % (catalog.pretty(item_id), catalog.fmt(price)), 0.8, view=0.12))
+
+        bg, txt = banner(dept)                      # big hanging sign above the department
+        mid = (xs[0] + xs[-1]) // 2
+        entities.append(text_display(mid, 7.6, z0, "§l" + txt + dept.upper(), 3.0,
+                                     bg=bg, tag_names=("am_dept",)))
+
+# store map next to the entrance
+lines = ["§l§6STORE MAP", ""]
+for num, depts in directory:
+    lines.append("§fAisle %d: §e%s" % (num, "§f, §e".join(depts)))
+lines += ["", "§7Prices: §6G§7 = gold (100), §fS§7 = silver (10), §cB§7 = bronze (1)",
+          "§7Pay automatically when you leave"]
+for mx in (cx - 12, cx + 11):
+    entities.append(text_display(mx, 3.2, WZ0 + 3, "\n".join(lines), 1.1, bg=signed(0xB0000000)))
 
 # ----------------------------------------------------------------------------
 # Trading villagers (fixed in place, no AI): pet shop, villager market, exchange
@@ -502,6 +551,24 @@ def villager(name, profession, offers, pos, rot, vtype="plains", level=5,
     return pos_entity(bx, by, bz, nbt)
 
 
+def clerk(pos, rot):
+    """Stock clerk: a wandering trader (blue robe, hat), so staff look different from
+    the shoppers. Empty offers: no trading. Walks around and makes its own sounds."""
+    bx, by, bz = pos
+    return pos_entity(bx, by, bz, {
+        "id": "minecraft:wandering_trader",
+        "Invulnerable": B(1),
+        "PersistenceRequired": B(1),
+        "Silent": B(0),
+        "DespawnDelay": I(0),
+        "Rotation": L(TAG_FLOAT, [F(rot), F(0.0)]),
+        "Tags": tags("am_npc", "am_stocker"),
+        "CustomName": "Stock Clerk",
+        "CustomNameVisible": B(1),
+        "Offers": {"Recipes": L(TAG_COMPOUND, [])},
+    })
+
+
 # traders on the back wall: pet shop and villager market
 for tx, (name, prof, color, offers) in zip(
         (cx - 8, cx + 8),
@@ -521,13 +588,13 @@ for ex in (cx - 11, cx + 10):
         put(ex + dx, 1, WZ0 - 3, COUNTER)
     entities.append(villager("Currency Exchange", "librarian", BANK, (ex, 1, WZ0 - 2), 180.0))
 
-# shoppers and stock clerks walk around (AI on): they move and make villager sounds
+# shoppers (villagers with AI) and stock clerks (wandering traders) walk around
 TYPES = ["plains", "desert", "jungle", "savanna", "snow", "swamp", "taiga"]
 JOBS = ["none", "none", "none", "nitwit", "farmer", "librarian", "shepherd", "butcher"]
 aisles = []
 for z0 in SHELF_Z0[:-1]:
     aisles += [z0 + 3, z0 + 4]
-aisles += [WZ0 + 9, WZ0 + 10, WZ1 - 14, WZ1 - 13]
+aisles += [WZ0 + 9, WZ0 + 10, WZ1 - 9]
 taken = set()
 placed = 0
 while placed < 30:
@@ -537,13 +604,12 @@ while placed < 30:
         continue
     taken.add((x, z))
     entities.append(villager(None, rng.choice(JOBS), None, (x, 1, z), float(rng.randint(0, 359)),
-                             rng.choice(TYPES), level=1, ai=True, extra_tags=("am_npc",)))
+                             rng.choice(TYPES), level=1, ai=True,
+                             extra_tags=("am_npc", "am_shopper")))
     placed += 1
-for k in range(4):
-    x = WX0 + 10 + 22 * k
-    entities.append(villager("Stock Clerk", "farmer", None, (x, 1, WZ0 + 9 + 2 * (k % 2)),
-                             float(rng.randint(0, 359)), "plains", level=2, ai=True,
-                             extra_tags=("am_npc", "am_stocker")))
+for k in range(6):
+    x = WX0 + 8 + 15 * k
+    entities.append(clerk((x, 1, aisles[(k * 3) % len(aisles)]), float(rng.randint(0, 359))))
 
 # gate markers (self checkout) and aisle markers (where strays are sent back to)
 for dx in (-2, 0, 2):
