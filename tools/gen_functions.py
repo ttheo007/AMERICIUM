@@ -30,6 +30,10 @@ SILVER = "americium:americium_silver_coin"
 GOLD = "americium:americium_gold_coin"
 
 items = catalog.unique_items()          # [(item, price)]
+# edible items: eaten goods leave the inventory, so their uses are counted and charged
+FOOD = {"bread", "apple", "cooked_beef", "cooked_porkchop", "cooked_chicken", "baked_potato",
+        "golden_carrot", "pumpkin_pie", "cookie", "milk_bucket", "golden_apple", "honey_bottle",
+        "sweet_berries", "dried_kelp", "rabbit_stew", "mushroom_stew", "beetroot_soup"}
 
 
 def write(path, text):
@@ -53,6 +57,8 @@ load = [
 for i, (item, price) in enumerate(items):
     load.append("scoreboard objectives add am_b%d dummy" % i)
     load.append("scoreboard players set #p%d am_const %d" % (i, price))
+    if item in FOOD:
+        load.append("scoreboard objectives add am_u%d minecraft.used:minecraft.%s" % (i, item))
 fn("load", load)
 
 # --- tick / slow --------------------------------------------------------------
@@ -102,10 +108,12 @@ fn("leave", [
 ])
 
 # --- snapshot -----------------------------------------------------------------
-fn("snapshot", [
-    "execute store result score @s am_b%d run clear @s minecraft:%s 0" % (i, item)
-    for i, (item, _) in enumerate(items)
-])
+snap = []
+for i, (item, _) in enumerate(items):
+    snap.append("execute store result score @s am_b%d run clear @s minecraft:%s 0" % (i, item))
+    if item in FOOD:
+        snap.append("scoreboard players set @s am_u%d 0" % i)
+fn("snapshot", snap)
 
 # --- checkout -----------------------------------------------------------------
 co = ["scoreboard players set #owed am_tmp 0"]
@@ -113,6 +121,10 @@ for i, (item, _) in enumerate(items):
     co += [
         "execute store result score #cur am_tmp run clear @s minecraft:%s 0" % item,
         "scoreboard players operation #cur am_tmp -= @s am_b%d" % i,
+    ]
+    if item in FOOD:
+        co.append("scoreboard players operation #cur am_tmp += @s am_u%d" % i)
+    co += [
         "execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p%d am_const" % i,
         "execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp",
     ]

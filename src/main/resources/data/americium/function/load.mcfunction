@@ -5,26 +5,36 @@ scoreboard players set #100 am_const 100
 scoreboard players set #10 am_const 10
 scoreboard objectives add am_b0 dummy
 scoreboard players set #p0 am_const 5
+scoreboard objectives add am_u0 minecraft.used:minecraft.bread
 scoreboard objectives add am_b1 dummy
 scoreboard players set #p1 am_const 4
+scoreboard objectives add am_u1 minecraft.used:minecraft.apple
 scoreboard objectives add am_b2 dummy
 scoreboard players set #p2 am_const 12
+scoreboard objectives add am_u2 minecraft.used:minecraft.cooked_beef
 scoreboard objectives add am_b3 dummy
 scoreboard players set #p3 am_const 12
+scoreboard objectives add am_u3 minecraft.used:minecraft.cooked_porkchop
 scoreboard objectives add am_b4 dummy
 scoreboard players set #p4 am_const 9
+scoreboard objectives add am_u4 minecraft.used:minecraft.cooked_chicken
 scoreboard objectives add am_b5 dummy
 scoreboard players set #p5 am_const 6
+scoreboard objectives add am_u5 minecraft.used:minecraft.baked_potato
 scoreboard objectives add am_b6 dummy
 scoreboard players set #p6 am_const 35
+scoreboard objectives add am_u6 minecraft.used:minecraft.golden_carrot
 scoreboard objectives add am_b7 dummy
 scoreboard players set #p7 am_const 55
 scoreboard objectives add am_b8 dummy
 scoreboard players set #p8 am_const 25
+scoreboard objectives add am_u8 minecraft.used:minecraft.pumpkin_pie
 scoreboard objectives add am_b9 dummy
 scoreboard players set #p9 am_const 2
+scoreboard objectives add am_u9 minecraft.used:minecraft.cookie
 scoreboard objectives add am_b10 dummy
 scoreboard players set #p10 am_const 28
+scoreboard objectives add am_u10 minecraft.used:minecraft.milk_bucket
 scoreboard objectives add am_b11 dummy
 scoreboard players set #p11 am_const 28
 scoreboard objectives add am_b12 dummy
@@ -65,20 +75,27 @@ scoreboard objectives add am_b29 dummy
 scoreboard players set #p29 am_const 3
 scoreboard objectives add am_b30 dummy
 scoreboard players set #p30 am_const 195
+scoreboard objectives add am_u30 minecraft.used:minecraft.golden_apple
 scoreboard objectives add am_b31 dummy
 scoreboard players set #p31 am_const 27
+scoreboard objectives add am_u31 minecraft.used:minecraft.honey_bottle
 scoreboard objectives add am_b32 dummy
 scoreboard players set #p32 am_const 38
 scoreboard objectives add am_b33 dummy
 scoreboard players set #p33 am_const 3
+scoreboard objectives add am_u33 minecraft.used:minecraft.sweet_berries
 scoreboard objectives add am_b34 dummy
 scoreboard players set #p34 am_const 2
+scoreboard objectives add am_u34 minecraft.used:minecraft.dried_kelp
 scoreboard objectives add am_b35 dummy
 scoreboard players set #p35 am_const 38
+scoreboard objectives add am_u35 minecraft.used:minecraft.rabbit_stew
 scoreboard objectives add am_b36 dummy
 scoreboard players set #p36 am_const 18
+scoreboard objectives add am_u36 minecraft.used:minecraft.mushroom_stew
 scoreboard objectives add am_b37 dummy
 scoreboard players set #p37 am_const 16
+scoreboard objectives add am_u37 minecraft.used:minecraft.beetroot_soup
 scoreboard objectives add am_b38 dummy
 scoreboard players set #p38 am_const 2
 scoreboard objectives add am_b39 dummy

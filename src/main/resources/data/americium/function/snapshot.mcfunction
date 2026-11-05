@@ -1,14 +1,24 @@
 execute store result score @s am_b0 run clear @s minecraft:bread 0
+scoreboard players set @s am_u0 0
 execute store result score @s am_b1 run clear @s minecraft:apple 0
+scoreboard players set @s am_u1 0
 execute store result score @s am_b2 run clear @s minecraft:cooked_beef 0
+scoreboard players set @s am_u2 0
 execute store result score @s am_b3 run clear @s minecraft:cooked_porkchop 0
+scoreboard players set @s am_u3 0
 execute store result score @s am_b4 run clear @s minecraft:cooked_chicken 0
+scoreboard players set @s am_u4 0
 execute store result score @s am_b5 run clear @s minecraft:baked_potato 0
+scoreboard players set @s am_u5 0
 execute store result score @s am_b6 run clear @s minecraft:golden_carrot 0
+scoreboard players set @s am_u6 0
 execute store result score @s am_b7 run clear @s minecraft:cake 0
 execute store result score @s am_b8 run clear @s minecraft:pumpkin_pie 0
+scoreboard players set @s am_u8 0
 execute store result score @s am_b9 run clear @s minecraft:cookie 0
+scoreboard players set @s am_u9 0
 execute store result score @s am_b10 run clear @s minecraft:milk_bucket 0
+scoreboard players set @s am_u10 0
 execute store result score @s am_b11 run clear @s minecraft:leather_helmet 0
 execute store result score @s am_b12 run clear @s minecraft:leather_chestplate 0
 execute store result score @s am_b13 run clear @s minecraft:leather_leggings 0
@@ -29,13 +39,20 @@ execute store result score @s am_b27 run clear @s minecraft:lever 0
 execute store result score @s am_b28 run clear @s minecraft:redstone_lamp 0
 execute store result score @s am_b29 run clear @s minecraft:redstone_torch 0
 execute store result score @s am_b30 run clear @s minecraft:golden_apple 0
+scoreboard players set @s am_u30 0
 execute store result score @s am_b31 run clear @s minecraft:honey_bottle 0
+scoreboard players set @s am_u31 0
 execute store result score @s am_b32 run clear @s minecraft:glistering_melon_slice 0
 execute store result score @s am_b33 run clear @s minecraft:sweet_berries 0
+scoreboard players set @s am_u33 0
 execute store result score @s am_b34 run clear @s minecraft:dried_kelp 0
+scoreboard players set @s am_u34 0
 execute store result score @s am_b35 run clear @s minecraft:rabbit_stew 0
+scoreboard players set @s am_u35 0
 execute store result score @s am_b36 run clear @s minecraft:mushroom_stew 0
+scoreboard players set @s am_u36 0
 execute store result score @s am_b37 run clear @s minecraft:beetroot_soup 0
+scoreboard players set @s am_u37 0
 execute store result score @s am_b38 run clear @s minecraft:wheat_seeds 0
 execute store result score @s am_b39 run clear @s minecraft:beetroot_seeds 0
 execute store result score @s am_b40 run clear @s minecraft:pumpkin_seeds 0

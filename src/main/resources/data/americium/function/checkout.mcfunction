@@ -1,30 +1,37 @@
 scoreboard players set #owed am_tmp 0
 execute store result score #cur am_tmp run clear @s minecraft:bread 0
 scoreboard players operation #cur am_tmp -= @s am_b0
+scoreboard players operation #cur am_tmp += @s am_u0
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p0 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:apple 0
 scoreboard players operation #cur am_tmp -= @s am_b1
+scoreboard players operation #cur am_tmp += @s am_u1
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p1 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:cooked_beef 0
 scoreboard players operation #cur am_tmp -= @s am_b2
+scoreboard players operation #cur am_tmp += @s am_u2
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p2 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:cooked_porkchop 0
 scoreboard players operation #cur am_tmp -= @s am_b3
+scoreboard players operation #cur am_tmp += @s am_u3
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p3 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:cooked_chicken 0
 scoreboard players operation #cur am_tmp -= @s am_b4
+scoreboard players operation #cur am_tmp += @s am_u4
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p4 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:baked_potato 0
 scoreboard players operation #cur am_tmp -= @s am_b5
+scoreboard players operation #cur am_tmp += @s am_u5
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p5 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:golden_carrot 0
 scoreboard players operation #cur am_tmp -= @s am_b6
+scoreboard players operation #cur am_tmp += @s am_u6
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p6 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:cake 0
@@ -33,14 +40,17 @@ execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur a
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:pumpkin_pie 0
 scoreboard players operation #cur am_tmp -= @s am_b8
+scoreboard players operation #cur am_tmp += @s am_u8
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p8 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:cookie 0
 scoreboard players operation #cur am_tmp -= @s am_b9
+scoreboard players operation #cur am_tmp += @s am_u9
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p9 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:milk_bucket 0
 scoreboard players operation #cur am_tmp -= @s am_b10
+scoreboard players operation #cur am_tmp += @s am_u10
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p10 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:leather_helmet 0
@@ -121,10 +131,12 @@ execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur a
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:golden_apple 0
 scoreboard players operation #cur am_tmp -= @s am_b30
+scoreboard players operation #cur am_tmp += @s am_u30
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p30 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:honey_bottle 0
 scoreboard players operation #cur am_tmp -= @s am_b31
+scoreboard players operation #cur am_tmp += @s am_u31
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p31 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:glistering_melon_slice 0
@@ -133,22 +145,27 @@ execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur a
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:sweet_berries 0
 scoreboard players operation #cur am_tmp -= @s am_b33
+scoreboard players operation #cur am_tmp += @s am_u33
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p33 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:dried_kelp 0
 scoreboard players operation #cur am_tmp -= @s am_b34
+scoreboard players operation #cur am_tmp += @s am_u34
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p34 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:rabbit_stew 0
 scoreboard players operation #cur am_tmp -= @s am_b35
+scoreboard players operation #cur am_tmp += @s am_u35
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p35 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:mushroom_stew 0
 scoreboard players operation #cur am_tmp -= @s am_b36
+scoreboard players operation #cur am_tmp += @s am_u36
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p36 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:beetroot_soup 0
 scoreboard players operation #cur am_tmp -= @s am_b37
+scoreboard players operation #cur am_tmp += @s am_u37
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #cur am_tmp *= #p37 am_const
 execute if score #cur am_tmp matches 1.. run scoreboard players operation #owed am_tmp += #cur am_tmp
 execute store result score #cur am_tmp run clear @s minecraft:wheat_seeds 0
