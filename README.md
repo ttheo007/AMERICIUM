@@ -53,3 +53,10 @@ The resulting mod JAR will be in `build/libs/`.
 ## Note on names and logos
 
 The store theme is inspired by a real retail brand. This project is for private use only and must not be published or distributed under that brand name or logo.
+
+## Shop mechanics (update)
+- Every shelf barrel holds 7–10 full stacks. Stock clerks (wandering traders, "Stock Clerk") refill shelves they pass; every ~30 s all shelves below 7 stacks are refilled to 10.
+- 11 departments, grouped into aisles with coloured banners, floor stripes and a store map at the entrance.
+- Survival players are in adventure mode inside the store (no breaking/placing); creative players are exempt.
+- Crafting results cannot be taken inside the store (mixin `SlotMixin`), so goods cannot be crafted for free.
+- Prices and products: `tools/catalog.py`. Regenerate with `python3 tools/gen_store.py 5023` and `python3 tools/gen_functions.py`.
